@@ -1,3 +1,4 @@
+using Application;
 using Infrastructure;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,6 +12,8 @@ var configuration = builder.Configuration;
 builder.Services.ConfigureAppSettings(configuration);
 
 builder.Services.AddInfrastructure(configuration);
+
+builder.Services.AddApplication();
 
 builder.Services.AddAuthWithJwt(configuration);
 

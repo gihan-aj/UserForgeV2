@@ -30,6 +30,9 @@ namespace Infrastructure
                 .AddTokenProvider<EmailTokenProvider<User>>(TokenOptions.DefaultEmailProvider)
                 .AddTokenProvider<PasswordResetTokenProvider<User>>(TokenOptions.DefaultProvider);
 
+            // Register services
+            services.AddServiceRegistrations();
+
             return services;
         }
     }

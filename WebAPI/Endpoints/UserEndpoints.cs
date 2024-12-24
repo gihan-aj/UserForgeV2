@@ -1,7 +1,12 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using Application.Users.Commands.Register;
+using MediatR;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using SharedKernal;
+using System;
 using System.Threading;
+using WebAPI.Helpers;
 
 namespace WebAPI.Endpoints
 {
@@ -13,11 +18,120 @@ namespace WebAPI.Endpoints
                 .MapGroup("user")
                 .WithTags("User");
 
-            group.MapGet("", (CancellationToken cancellationToken) =>
+            group.MapPost("register", async (
+                RegisterUserRequest req, 
+                ISender sender, 
+                CancellationToken cancellationToken) =>
             {
-                return Results.Ok("user v1");
-            }).AllowAnonymous();
+                var command = new RegisterUserCommand(
+                    req.FirstName.ToLower(),
+                    req.LastName.ToLower(),
+                    req.Email.ToLower(),
+                    string.IsNullOrWhiteSpace(req.PhoneNumber)? null : req.PhoneNumber,
+                    req.DateOfBirth.HasValue? req.DateOfBirth : null,
+                    req.Password);
+
+                var result = await sender.Send(command, cancellationToken);
+                if (result.IsFailure)
+                {
+                    return HandleFailure(result);
+                }
+
+                return Results.Created(
+                    uri : $"/users/id",
+                    value: new
+                    {
+                        Message = "User created successfully. Please check your email to confirm your account."
+                    });
+            })
+                .Produces(StatusCodes.Status201Created)
+                .AllowAnonymous();
             
         }
+
+        private static IResult HandleFailure(Result result) =>
+            result switch
+            {
+                { IsSuccess: true } => throw new InvalidOperationException(),
+
+                { Error: { Code: "ValidationError" } } =>
+                Results.BadRequest(ErrorHandler.CreateProblemDetails(
+                    "Validation Errors",
+                    StatusCodes.Status400BadRequest,
+                    result.Error,
+                    result.Error.Details.ToArray())),
+
+                { Error: { Code: "IdentityError" } } =>
+                Results.BadRequest(ErrorHandler.CreateProblemDetails(
+                    "Validation Errors",
+                    StatusCodes.Status400BadRequest,
+                    result.Error,
+                    result.Error.Details.ToArray())),
+
+                { Error: { Code: "EmailAlreadyExists" } } =>
+                Results.Problem(ErrorHandler.CreateProblemDetails(
+                    "Email Already Exists",
+                    StatusCodes.Status409Conflict,
+                    result.Error)),
+
+                { Error: { Code: "UserNotFound" } } =>
+                Results.NotFound(ErrorHandler.CreateProblemDetails(
+                    "User Not Found",
+                    StatusCodes.Status404NotFound,
+                    result.Error)),
+
+                { Error: { Code: "EmailNotFound" } } =>
+                Results.Problem(ErrorHandler.CreateProblemDetails(
+                    "Email Not Found",
+                    StatusCodes.Status404NotFound,
+                    result.Error)),
+
+                { Error: { Code: "EmailAlreadyConfirmed" } } =>
+                Results.Problem(ErrorHandler.CreateProblemDetails(
+                    "Email Already Confirmed",
+                    StatusCodes.Status409Conflict,
+                    result.Error)),
+
+                { Error: { Code: "EmailNotConfirmed" } } =>
+                Results.Problem(ErrorHandler.CreateProblemDetails(
+                    "Email Not Confirmed",
+                    StatusCodes.Status400BadRequest,
+                    result.Error)),
+
+                { Error: { Code: "InvalidCredentials" } } =>
+                Results.BadRequest(ErrorHandler.CreateProblemDetails(
+                    "Invalid Credentials",
+                    StatusCodes.Status400BadRequest,
+                    result.Error)),
+
+                { Error: { Code: "MissingRefreshToken" } } =>
+                Results.Problem(ErrorHandler.CreateProblemDetails(
+                    "Token Error",
+                    StatusCodes.Status401Unauthorized,
+                    result.Error)),
+
+                { Error: { Code: "InvalidRefreshToken" } } =>
+                Results.Problem(ErrorHandler.CreateProblemDetails(
+                    "Token Error",
+                    StatusCodes.Status401Unauthorized,
+                    result.Error)),
+
+                { Error: { Code: "InvalidAccessToken" } } =>
+                Results.Problem(ErrorHandler.CreateProblemDetails(
+                    "Token Error",
+                    StatusCodes.Status401Unauthorized,
+                    result.Error)),
+
+                { Error: { Code: "PasswordMismatch" } } =>
+                Results.BadRequest(ErrorHandler.CreateProblemDetails(
+                    "Password Mismatch",
+                    StatusCodes.Status400BadRequest,
+                    result.Error)),
+
+                _ => Results.Problem(ErrorHandler.CreateProblemDetails(
+                    "Internal server error",
+                    StatusCodes.Status500InternalServerError,
+                    result.Error))
+            };
     }
 }
