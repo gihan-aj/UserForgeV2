@@ -22,6 +22,11 @@
 
         public static implicit operator string(Error error) => error.Code;
 
+        public void AddDetails(Error[] errors)
+        {
+            Details.AddRange(errors);
+        }
+
         public static bool operator ==(Error? a, Error? b)
         {
             if (a is null && b is null)
