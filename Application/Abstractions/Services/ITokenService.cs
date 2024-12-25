@@ -1,6 +1,6 @@
 ﻿using Domain.Users;
 
-namespace Application.Services
+namespace Application.Abstractions.Services
 {
     public interface ITokenService
     {

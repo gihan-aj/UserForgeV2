@@ -3,7 +3,7 @@ using SharedKernal;
 using System;
 using System.Threading.Tasks;
 
-namespace Application.Services
+namespace Application.Abstractions.Services
 {
     public interface IUsersService
     {

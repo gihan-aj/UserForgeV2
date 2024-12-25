@@ -9,7 +9,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using System;
-using Application.Services;
+using Application.Abstractions.Services;
 
 namespace Infrastructure.Services
 {

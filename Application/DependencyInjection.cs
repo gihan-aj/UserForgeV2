@@ -1,5 +1,6 @@
 ﻿using Application.Behaviors;
 using FluentValidation;
+using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Application
@@ -17,6 +18,8 @@ namespace Application
             });
 
             services.AddValidatorsFromAssembly(assembly);
+
+            services.AddScoped(typeof(IPipelineBehavior<,>), typeof(LoggingPipelineBehavior<,>));
 
             return services;
         }

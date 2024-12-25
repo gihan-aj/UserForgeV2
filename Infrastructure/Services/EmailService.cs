@@ -1,5 +1,4 @@
-﻿using Application.Services;
-using Domain.Users;
+﻿using Domain.Users;
 using Infrastructure.Settings;
 using Microsoft.Extensions.Options;
 using SharedKernal;
@@ -9,6 +8,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.WebUtilities;
+using Application.Abstractions.Services;
 
 namespace Infrastructure.Services
 {

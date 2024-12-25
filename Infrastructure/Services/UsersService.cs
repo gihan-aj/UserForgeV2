@@ -1,6 +1,6 @@
 ﻿
 
-using Application.Services;
+using Application.Abstractions.Services;
 using Domain.Users;
 using Infrastructure.Settings;
 using Microsoft.AspNetCore.Identity;

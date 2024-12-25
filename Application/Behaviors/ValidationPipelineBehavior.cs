@@ -1,6 +1,8 @@
 ﻿using FluentValidation;
 using MediatR;
+using Microsoft.Extensions.Logging;
 using SharedKernal;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -14,10 +16,14 @@ namespace Application.Behaviors
         where TResponse : Result
     {
         private readonly IEnumerable<IValidator<TRequest>> _validators;
+        private readonly ILogger<ValidationPipelineBehavior<TRequest, TResponse>> _logger;
 
-        public ValidationPipelineBehavior(IEnumerable<IValidator<TRequest>> validators)
+        public ValidationPipelineBehavior(
+            IEnumerable<IValidator<TRequest>> validators, 
+            ILogger<ValidationPipelineBehavior<TRequest, TResponse>> logger)
         {
             _validators = validators;
+            _logger = logger;
         }
 
         public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
@@ -36,6 +42,12 @@ namespace Application.Behaviors
                     failure.ErrorMessage))
                 .Distinct()
                 .ToArray();
+
+            _logger.LogError(
+                  "Validation Errors: {@RequestName}, {@Error}, {@DateTimeUtc}",
+                  typeof(TRequest).Name,
+                  String.Join(", ", errors.Select(err => err.Code)),
+                  DateTime.UtcNow);
 
             if (errors.Any())
             {
