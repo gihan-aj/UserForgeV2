@@ -4,11 +4,13 @@ using Application.Abstractions.Services;
 using Domain.Users;
 using Infrastructure.Settings;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
 using SharedKernal;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Infrastructure.Services
@@ -69,6 +71,54 @@ namespace Infrastructure.Services
             if (!addUserRoleResult.Succeeded)
             {
                 return CreateIdentityError<User>(addUserRoleResult.Errors);
+            }
+
+            var emailConfirmationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            var emailSendResult = await _emailService.SendConfirmationEmailAsync(user, emailConfirmationToken);
+            if (emailSendResult.IsFailure)
+            {
+                return emailSendResult;
+            }
+
+            return user;
+        }
+
+        public async Task<Result> ConfirmEmailAsync(string userId, string token)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user is null)
+            {
+                return Result.Failure(UserErrors.NotFound.User(userId));
+            }
+
+            if (user.EmailConfirmed)
+            {
+                return Result.Failure(UserErrors.Conflict.EmailAlreadyConfirmed(user.Email!));
+            }
+
+            var decodedTokenBytes = WebEncoders.Base64UrlDecode(token);
+            var decodedToken = Encoding.UTF8.GetString(decodedTokenBytes);
+
+            var result = await _userManager.ConfirmEmailAsync(user, decodedToken);
+            if (!result.Succeeded)
+            {
+                return CreateIdentityError(result.Errors);
+            }
+
+            return Result.Success();
+        }
+
+        public async Task<Result<User>> ResendEmailConfirmationLink(string email)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            if(user is null)
+            {
+                return Result.Failure<User>(UserErrors.NotFound.Email(email));
+            }
+
+            if (user.EmailConfirmed)
+            {
+                return Result.Failure<User>(UserErrors.Conflict.EmailAlreadyConfirmed(user.Email!));
             }
 
             var emailConfirmationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);

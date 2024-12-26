@@ -1,4 +1,6 @@
-﻿using Application.Users.Commands.Register;
+﻿using Application.Users.Commands.ConfirmEmail;
+using Application.Users.Commands.Register;
+using Application.Users.Commands.ResendEmailConfirmation;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -38,7 +40,7 @@ namespace WebAPI.Endpoints
                 }
 
                 return Results.Created(
-                    uri : $"/users/id",
+                    uri : $"/users/{result.Value.Id}",
                     value: new
                     {
                         Message = "User created successfully. Please check your email to confirm your account."
@@ -46,7 +48,40 @@ namespace WebAPI.Endpoints
             })
                 .Produces(StatusCodes.Status201Created)
                 .AllowAnonymous();
-            
+
+            group.MapPut("confirm-email", async (
+                string userId, 
+                string token, 
+                ISender sender, 
+                CancellationToken cancellationToken) =>
+            {
+                var result = await sender.Send(new ConfirmEmailCommand(userId, token), cancellationToken);
+                if (result.IsFailure)
+                {
+                    return HandleFailure(result);
+                }
+
+                return Results.NoContent();
+            })
+                .Produces(StatusCodes.Status204NoContent)
+                .AllowAnonymous();
+
+            group.MapPost("resend-email-confirmation-link", async (
+                string email, 
+                ISender sender, 
+                CancellationToken cancellationToken) =>
+            {
+                var result = await sender.Send(new ResendEmailConfirmationCommand(email), cancellationToken);
+                if (result.IsFailure)
+                {
+                    return HandleFailure(result);
+                }
+
+                return Results.NoContent();
+            })
+                .Produces(StatusCodes.Status204NoContent)
+                .AllowAnonymous();
+
         }
 
         private static IResult HandleFailure(Result result) =>
