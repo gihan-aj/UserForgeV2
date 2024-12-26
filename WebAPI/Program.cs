@@ -3,6 +3,7 @@ using Infrastructure;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Serilog;
 using WebAPI.Extensions;
 using WebAPI.Middlewares;
 
@@ -22,7 +23,12 @@ builder.Services.AddProblemDetails();
 
 builder.Services.AddApiVersioningWithSwagger();
 
+builder.Host.UseSerilog((context, configuration) =>
+    configuration.ReadFrom.Configuration(context.Configuration));
+
 var app = builder.Build();
+
+app.UseSerilogRequestLogging();
 
 app.UseExceptionHandler();
 
