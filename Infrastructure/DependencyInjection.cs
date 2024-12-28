@@ -1,4 +1,5 @@
-﻿using Domain.Users;
+﻿using Application.Data;
+using Domain.Users;
 using Infrastructure.Identity;
 using Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
@@ -17,6 +18,10 @@ namespace Infrastructure
             // Add DbContext
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(connection));
+
+            services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
+
+            services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<ApplicationDbContext>());
 
             // Add Identity Configuration
             services.AddIdentityCore<User>(options =>

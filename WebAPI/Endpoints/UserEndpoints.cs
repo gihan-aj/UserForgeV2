@@ -1,4 +1,5 @@
 ﻿using Application.Users.Commands.ConfirmEmail;
+using Application.Users.Commands.Login;
 using Application.Users.Commands.Register;
 using Application.Users.Commands.ResendEmailConfirmation;
 using MediatR;
@@ -40,7 +41,7 @@ namespace WebAPI.Endpoints
                 }
 
                 return Results.Created(
-                    uri : $"/users/{result.Value.Id}",
+                    uri : $"/users/{result.Value}",
                     value: new
                     {
                         Message = "User created successfully. Please check your email to confirm your account."
@@ -71,7 +72,7 @@ namespace WebAPI.Endpoints
                 ISender sender, 
                 CancellationToken cancellationToken) =>
             {
-                var result = await sender.Send(new ResendEmailConfirmationCommand(email), cancellationToken);
+                var result = await sender.Send(new ResendEmailConfirmationCommand(email.ToLower()), cancellationToken);
                 if (result.IsFailure)
                 {
                     return HandleFailure(result);
@@ -81,6 +82,27 @@ namespace WebAPI.Endpoints
             })
                 .Produces(StatusCodes.Status204NoContent)
                 .AllowAnonymous();
+
+            group.MapPost("login", async (
+                LoginUserRequest request, 
+                ISender sender, 
+                CancellationToken cancellationToken) =>
+            {
+                var command = new LoginUserCommand(
+                    request.Email.ToLower(),
+                    request.Password,
+                    string.IsNullOrWhiteSpace(request.DeviceInfo) ? null : request.DeviceInfo);
+
+                var result = await sender.Send(command, cancellationToken);
+                if (result.IsFailure)
+                {
+                    return HandleFailure(result);
+                }
+
+                return Results.Ok(result.Value);
+            })
+                .Produces(StatusCodes.Status200OK, typeof(LoginUserResponse))
+                .AllowAnonymous(); ;
 
         }
 

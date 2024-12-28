@@ -10,7 +10,7 @@ namespace Application.Users.Commands.Register
         string LastName,
         string Email,
         string? PhoneNumber,
-        DateTime? DateOfBirth,
+        DateOnly? DateOfBirth,
         string Password
-        ) : ICommand<User>;
+        ) : ICommand<string>;
 }

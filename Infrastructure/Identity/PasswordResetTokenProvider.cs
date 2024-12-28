@@ -1,4 +1,4 @@
-﻿using Infrastructure.Settings;
+﻿using Application.Settings;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using System;

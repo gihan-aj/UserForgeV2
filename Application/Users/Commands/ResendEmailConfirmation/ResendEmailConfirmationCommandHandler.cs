@@ -7,18 +7,45 @@ using System.Threading.Tasks;
 
 namespace Application.Users.Commands.ResendEmailConfirmation
 {
-    internal sealed class ResendEmailConfirmationCommandHandler : ICommandHandler<ResendEmailConfirmationCommand, User>
+    internal sealed class ResendEmailConfirmationCommandHandler : ICommandHandler<ResendEmailConfirmationCommand>
     {
-        private readonly IUsersService _usersService;
+        private readonly IUserService _userService;
+        private readonly IEmailService _emailService;
 
-        public ResendEmailConfirmationCommandHandler(IUsersService usersService)
+        public ResendEmailConfirmationCommandHandler(IUserService userService, IEmailService emailService)
         {
-            _usersService = usersService;
+            _userService = userService;
+            _emailService = emailService;
         }
 
-        public Task<Result<User>> Handle(ResendEmailConfirmationCommand request, CancellationToken cancellationToken)
+        public async Task<Result> Handle(ResendEmailConfirmationCommand request, CancellationToken cancellationToken)
         {
-            return _usersService.ResendEmailConfirmationLink(request.Email);
+            var userResult = await _userService.FindByEmailAsync(request.Email);
+            if (userResult.IsFailure)
+            {
+                return userResult.Error;
+            }
+
+            var user = userResult.Value;
+            if(user.EmailConfirmed)
+            {
+                return UserErrors.Conflict.EmailAlreadyConfirmed(request.Email);
+            }
+
+            var tokenResult = await _userService.GenerateEmailConfirmationTokenAsync(user);
+            if (tokenResult.IsFailure)
+            {
+                return tokenResult.Error;
+            }
+
+            // Confirmation link via email
+            var emailResult = await _emailService.SendConfirmationEmailAsync(user, tokenResult.Value);
+            if (emailResult.IsFailure)
+            {
+                return emailResult.Error;
+            }
+
+            return Result.Success();
         }
     }
 }

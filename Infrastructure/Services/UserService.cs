@@ -1,11 +1,8 @@
-﻿
-
-using Application.Abstractions.Services;
+﻿using Application.Abstractions.Services;
+using Application.Users.Commands.Login;
 using Domain.Users;
-using Infrastructure.Settings;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.Extensions.Options;
 using SharedKernal;
 using System;
 using System.Collections.Generic;
@@ -15,31 +12,23 @@ using System.Threading.Tasks;
 
 namespace Infrastructure.Services
 {
-    public class UsersService : IUsersService
+    public class UserService : IUserService
     {
-        private readonly RoleManager<IdentityRole<string>> _roleManager;
         private readonly UserManager<User> _userManager;
-        private readonly TokenSettings _tokenSettings;
-        private readonly IEmailService _emailService;
+        private readonly RoleManager<IdentityRole<string>> _roleManager;
 
-        public UsersService(
-            RoleManager<IdentityRole<string>> roleManager, 
-            UserManager<User> userManager, 
-            IOptions<TokenSettings> tokenSettings, 
-            IEmailService emailService)
+        public UserService(RoleManager<IdentityRole<string>> roleManager, UserManager<User> userManager)
         {
             _roleManager = roleManager;
             _userManager = userManager;
-            _tokenSettings = tokenSettings.Value;
-            _emailService = emailService;
         }
 
         public async Task<Result<User>> CreateAsync(
-            string firstName, 
-            string lastName, 
-            string email, 
-            string? phoneNumber, 
-            DateTime? dateOfBirth, 
+            string firstName,
+            string lastName,
+            string email,
+            string? phoneNumber,
+            DateOnly? dateOfBirth,
             string password)
         {
             if (await _userManager.FindByEmailAsync(email) != null)
@@ -67,33 +56,37 @@ namespace Infrastructure.Services
                 return CreateIdentityError<User>(createUserResult.Errors);
             }
 
-            var addUserRoleResult = await _userManager.AddToRoleAsync(user, Roles.User);
+            var addUserRoleResult = await _userManager.AddToRoleAsync(user,Roles.User);
             if (!addUserRoleResult.Succeeded)
             {
                 return CreateIdentityError<User>(addUserRoleResult.Errors);
             }
 
-            var emailConfirmationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            var emailSendResult = await _emailService.SendConfirmationEmailAsync(user, emailConfirmationToken);
-            if (emailSendResult.IsFailure)
+            return Result.Success(user);
+        }
+
+        public async Task<Result<string>> GenerateEmailConfirmationTokenAsync(User user)
+        {
+            if (user.EmailConfirmed)
             {
-                return emailSendResult;
+                return Result.Failure<string>(UserErrors.Conflict.EmailAlreadyConfirmed(user.Email!));
             }
 
-            return user;
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            return token;
         }
 
         public async Task<Result> ConfirmEmailAsync(string userId, string token)
         {
             var user = await _userManager.FindByIdAsync(userId);
-            if (user is null)
+            if(user is null)
             {
-                return Result.Failure(UserErrors.NotFound.User(userId));
+                return UserErrors.NotFound.User(userId);
             }
 
             if (user.EmailConfirmed)
             {
-                return Result.Failure(UserErrors.Conflict.EmailAlreadyConfirmed(user.Email!));
+                return UserErrors.Conflict.EmailAlreadyConfirmed(user.Email!);
             }
 
             var decodedTokenBytes = WebEncoders.Base64UrlDecode(token);
@@ -108,32 +101,49 @@ namespace Infrastructure.Services
             return Result.Success();
         }
 
-        public async Task<Result<User>> ResendEmailConfirmationLink(string email)
+        public async Task<Result<User>> FindByEmailAsync(string email)
         {
             var user = await _userManager.FindByEmailAsync(email);
             if(user is null)
             {
-                return Result.Failure<User>(UserErrors.NotFound.Email(email));
-            }
-
-            if (user.EmailConfirmed)
-            {
-                return Result.Failure<User>(UserErrors.Conflict.EmailAlreadyConfirmed(user.Email!));
-            }
-
-            var emailConfirmationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            var emailSendResult = await _emailService.SendConfirmationEmailAsync(user, emailConfirmationToken);
-            if (emailSendResult.IsFailure)
-            {
-                return emailSendResult;
+                Result.Failure<User>(UserErrors.NotFound.Email(email));
             }
 
             return user;
         }
 
-        /**
-         * Helper methods
-         */
+        public async Task<Result<User>> LoginAsync(string email, string password)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            if(user is null)
+            {
+                return Result.Failure<User>(UserErrors.Validation.InvalidCredentials);
+            }
+
+            if (!user.EmailConfirmed)
+            {
+                return Result.Failure<User>(UserErrors.Authorization.EmailNotConfirmed(email));
+            }
+
+            if (!await _userManager.CheckPasswordAsync(user, password))
+            {
+                return Result.Failure<User>(UserErrors.Validation.InvalidCredentials);
+            }
+
+            return Result.Success(user);
+        }
+
+        public async Task<Result<string[]>> GetRolesAsync(User user)
+        {
+            var roles = await _userManager.GetRolesAsync(user);
+            if(roles is null)
+            {
+                return Result.Success<string[]>([]);
+            }
+
+            return Result.Success<string[]>(roles.ToArray());
+        }
+
         private Result<T> CreateIdentityError<T>(IEnumerable<IdentityError> errors)
         {
             var subErrors = errors

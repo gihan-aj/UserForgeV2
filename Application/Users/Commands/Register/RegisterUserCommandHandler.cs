@@ -7,18 +7,20 @@ using System.Threading.Tasks;
 
 namespace Application.Users.Commands.Register
 {
-    internal sealed class RegisterUserCommandHandler : ICommandHandler<RegisterUserCommand, User>
+    internal sealed class RegisterUserCommandHandler : ICommandHandler<RegisterUserCommand, string>
     {
-        private readonly IUsersService _usersService;
+        private readonly IUserService _userService;
+        private readonly IEmailService _emailService;
 
-        public RegisterUserCommandHandler(IUsersService usersService)
+        public RegisterUserCommandHandler(IUserService userService, IEmailService emailService)
         {
-            _usersService = usersService;
+            _userService = userService;
+            _emailService = emailService;
         }
 
-        public async Task<Result<User>> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
+        public async Task<Result<string>> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
         {
-            var newUserResult = await _usersService.CreateAsync(
+            var newUserResult = await _userService.CreateAsync(
                 request.FirstName,
                 request.LastName,
                 request.Email,
@@ -26,7 +28,27 @@ namespace Application.Users.Commands.Register
                 request.DateOfBirth,
                 request.Password);
 
-            return newUserResult;       
+            if (newUserResult.IsFailure)
+            {
+                return Result.Failure<string>(newUserResult.Error);
+            }
+
+            var newUser = newUserResult.Value;
+
+            var tokenResult = await _userService.GenerateEmailConfirmationTokenAsync(newUser);
+            if (tokenResult.IsFailure)
+            {
+                return Result.Failure<string>(tokenResult.Error);
+            }
+
+            // Confirmation link via email
+            var emailResult = await _emailService.SendConfirmationEmailAsync(newUser, tokenResult.Value);
+            if (emailResult.IsFailure)
+            {
+                return Result.Failure<string>(emailResult.Error);
+            }
+
+            return newUser.Id;       
         }
     }
 }

@@ -1,5 +1,5 @@
 ﻿using Domain.Users;
-using Infrastructure.Settings;
+using Application.Settings;
 using Microsoft.Extensions.Options;
 using SharedKernal;
 using System;

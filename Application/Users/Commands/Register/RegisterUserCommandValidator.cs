@@ -51,20 +51,21 @@ namespace Application.Users.Commands.Register
             return Regex.IsMatch(phoneNumber, @"^\+?[1-9]\d{1,14}$"); // E.164 format
         }
 
-        private bool BeAValidAge(DateTime? dateOfBirth)
+        private bool BeAValidAge(DateOnly? dateOfBirth)
         {
-            if (!dateOfBirth.HasValue)
-            {
-                return false;
-            }
+            if (!dateOfBirth.HasValue) return false; // No date provided, not valid.
 
-            var age = DateTime.Now.Year - dateOfBirth.Value.Year;
-            if (dateOfBirth.Value.Date > DateTime.Now.AddYears(-age))
+            // Calculate the age based on today's date
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var age = today.Year - dateOfBirth.Value.Year;
+
+            // Adjust if the birthday hasn't occurred yet this year
+            if (today < dateOfBirth.Value.AddYears(age))
             {
                 age--;
             }
 
-            return age >= 16;
+            return age >= 16; // Validate the age threshold
         }
     }
 }

@@ -11,7 +11,7 @@ namespace Domain.Users
 
         public string LastName { get; set; } = string.Empty;
 
-        public DateTime? DateOfBirth { get; set; }
+        public DateOnly? DateOfBirth { get; set; }
 
         public bool IsActive { get; private set; } = true;
     }
