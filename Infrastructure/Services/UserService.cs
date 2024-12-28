@@ -144,6 +144,17 @@ namespace Infrastructure.Services
             return Result.Success<string[]>(roles.ToArray());
         }
 
+        public async Task<Result<User>> GetByIdAsync(string id)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if(user is null)
+            {
+                return Result.Failure<User>(UserErrors.NotFound.User(id));
+            }
+
+            return user;
+        }
+
         private Result<T> CreateIdentityError<T>(IEnumerable<IdentityError> errors)
         {
             var subErrors = errors

@@ -1,5 +1,4 @@
-﻿using Application.Data;
-using Domain.Primitives;
+﻿using Domain.Primitives;
 using Domain.Users;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -7,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Threading;
 using System;
+using Application.Abstractions.Data;
 
 namespace Infrastructure.Persistence
 {

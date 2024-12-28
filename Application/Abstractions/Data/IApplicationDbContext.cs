@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Domain.Users;
 using Microsoft.EntityFrameworkCore;
 
-namespace Application.Data
+namespace Application.Abstractions.Data
 {
     public interface IApplicationDbContext
     {

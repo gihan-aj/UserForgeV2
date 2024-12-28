@@ -1,5 +1,6 @@
 ﻿using Application.Users.Commands.ConfirmEmail;
 using Application.Users.Commands.Login;
+using Application.Users.Commands.Refresh;
 using Application.Users.Commands.Register;
 using Application.Users.Commands.ResendEmailConfirmation;
 using MediatR;
@@ -50,6 +51,7 @@ namespace WebAPI.Endpoints
                 .Produces(StatusCodes.Status201Created)
                 .AllowAnonymous();
 
+
             group.MapPut("confirm-email", async (
                 string userId, 
                 string token, 
@@ -67,6 +69,7 @@ namespace WebAPI.Endpoints
                 .Produces(StatusCodes.Status204NoContent)
                 .AllowAnonymous();
 
+
             group.MapPost("resend-email-confirmation-link", async (
                 string email, 
                 ISender sender, 
@@ -83,6 +86,7 @@ namespace WebAPI.Endpoints
                 .Produces(StatusCodes.Status204NoContent)
                 .AllowAnonymous();
 
+
             group.MapPost("login", async (
                 LoginUserRequest request, 
                 ISender sender, 
@@ -91,7 +95,7 @@ namespace WebAPI.Endpoints
                 var command = new LoginUserCommand(
                     request.Email.ToLower(),
                     request.Password,
-                    string.IsNullOrWhiteSpace(request.DeviceInfo) ? null : request.DeviceInfo);
+                    request.DeviceInfo);
 
                 var result = await sender.Send(command, cancellationToken);
                 if (result.IsFailure)
@@ -102,7 +106,25 @@ namespace WebAPI.Endpoints
                 return Results.Ok(result.Value);
             })
                 .Produces(StatusCodes.Status200OK, typeof(LoginUserResponse))
-                .AllowAnonymous(); ;
+                .AllowAnonymous();
+
+            group.MapPost("refresh", async (
+                RefreshUserRequest request, 
+                ISender sender, 
+                CancellationToken cancellationToken) =>
+            {
+                var command = new RefreshUserCommand(request.RefreshToken, request.DeviceInfo);
+
+                var result = await sender.Send(command, cancellationToken);
+                if (result.IsFailure)
+                {
+                    return HandleFailure(result);
+                }
+
+                return Results.Ok(result.Value);
+            })
+                .Produces(StatusCodes.Status200OK, typeof(RefreshUserResponse))
+                .AllowAnonymous();
 
         }
 

@@ -1,7 +1,7 @@
-﻿using Application.Abstractions.Messaging;
+﻿using Application.Abstractions.Data;
+using Application.Abstractions.Messaging;
 using Application.Abstractions.Repositories;
 using Application.Abstractions.Services;
-using Application.Data;
 using Application.Settings;
 using Microsoft.Extensions.Options;
 using SharedKernal;
@@ -49,17 +49,32 @@ namespace Application.Users.Commands.Login
 
             var accessToken = _tokenService.CreateJwtToken(user, roles);
 
-            string refreshToken = _tokenService.GenerateRefreshToken();
+            string refreshToken = _tokenService.GenerateRefreshToken();  
 
-            var loginResponse = new LoginUserResponse(user, roles, accessToken, refreshToken);
+            var refreshTokenExpiryDate = DateTime.UtcNow.AddDays(_tokenSettings.RefreshToken.ExpiresInDays);
 
-            _refreshTokenRepository.Add(
-                refreshToken,
-                DateTime.UtcNow.AddDays(_tokenSettings.RefreshToken.ExpiresInDays),
-                user,
-                request.DeviceInfo);
+            var existingToken = await _refreshTokenRepository.GetByUserIdAsync(user.Id, request.DeviceInfo);
+
+            if (existingToken is null)
+            {
+                _refreshTokenRepository.Add(
+                    refreshToken,
+                    refreshTokenExpiryDate,
+                    user,
+                    request.DeviceInfo);
+            }
+            else
+            {
+                var tokenRenewResult = await _refreshTokenRepository.RenewAsync(existingToken.Id, refreshToken, refreshTokenExpiryDate);
+                if (tokenRenewResult.IsFailure)
+                {
+                    return Result.Failure<LoginUserResponse>(tokenRenewResult.Error);
+                }
+            } 
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            var loginResponse = new LoginUserResponse(user, roles, accessToken, refreshToken);
 
             return Result.Success(loginResponse);
         }

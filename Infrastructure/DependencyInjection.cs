@@ -1,4 +1,4 @@
-﻿using Application.Data;
+﻿using Application.Abstractions.Data;
 using Domain.Users;
 using Infrastructure.Identity;
 using Infrastructure.Persistence;

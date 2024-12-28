@@ -25,5 +25,7 @@ namespace Application.Abstractions.Services
         Task<Result<User>> LoginAsync(string email, string password);
 
         Task<Result<string[]>> GetRolesAsync(User user);
+
+        Task<Result<User>> GetByIdAsync(string id);
     }
 }
