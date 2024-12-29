@@ -3,6 +3,7 @@ using Application.Users.Commands.Login;
 using Application.Users.Commands.Refresh;
 using Application.Users.Commands.Register;
 using Application.Users.Commands.ResendEmailConfirmation;
+using Application.Users.Commands.SendPasswordReset;
 using Application.Users.Queries.GetUser;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
@@ -148,6 +149,22 @@ namespace WebAPI.Endpoints
                 return Results.Ok(result.Value);
             })
                 .Produces(StatusCodes.Status200OK, typeof(GetUserResponse))
+                .RequireAuthorization();
+
+            group.MapPost("send-password-reset-link", async (
+                string email, 
+                ISender sender, 
+                CancellationToken cancellationToken) =>
+            {
+                var result = await sender.Send(new SendPasswordResetCommand(email));
+                if (result.IsFailure)
+                {
+                    return HandleFailure(result);
+                }
+
+                return Results.NoContent();
+            })
+                .Produces(StatusCodes.Status204NoContent)
                 .RequireAuthorization();
 
         }

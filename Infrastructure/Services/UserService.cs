@@ -106,7 +106,7 @@ namespace Infrastructure.Services
             var user = await _userManager.FindByEmailAsync(email);
             if(user is null)
             {
-                Result.Failure<User>(UserErrors.NotFound.Email(email));
+                return Result.Failure<User>(UserErrors.NotFound.Email(email));
             }
 
             return user;
@@ -153,6 +153,12 @@ namespace Infrastructure.Services
             }
 
             return user;
+        }
+
+        public async Task<string?> GeneratePasswordResetTokenAsync(User user)
+        {
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            return token;
         }
 
         private Result<T> CreateIdentityError<T>(IEnumerable<IdentityError> errors)

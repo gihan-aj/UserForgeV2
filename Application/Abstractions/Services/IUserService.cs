@@ -27,5 +27,7 @@ namespace Application.Abstractions.Services
         Task<Result<string[]>> GetRolesAsync(User user);
 
         Task<Result<User>> GetByIdAsync(string id);
+
+        Task<string?> GeneratePasswordResetTokenAsync(User user);
     }
 }
