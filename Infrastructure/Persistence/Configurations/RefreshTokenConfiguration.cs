@@ -12,7 +12,7 @@ namespace Infrastructure.Persistence.Configurations
             builder.HasKey(rt => rt.Id);
 
             builder.Property(rt => rt.Token).HasMaxLength(450).IsRequired();
-            builder.Property(rt => rt.DeviceInfo).HasMaxLength(450).IsRequired();
+            builder.Property(rt => rt.DeviceIdentifierHash).HasMaxLength(450).IsRequired();
 
             builder.HasOne<User>()
                 .WithMany()

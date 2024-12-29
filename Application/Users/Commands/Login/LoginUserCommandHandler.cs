@@ -53,7 +53,9 @@ namespace Application.Users.Commands.Login
 
             var refreshTokenExpiryDate = DateTime.UtcNow.AddDays(_tokenSettings.RefreshToken.ExpiresInDays);
 
-            var existingToken = await _refreshTokenRepository.GetByUserIdAsync(user.Id, request.DeviceInfo);
+            var hashedDeviceIdentifier = _tokenService.Hash(request.DeviceIdentifier);
+
+            var existingToken = await _refreshTokenRepository.GetByUserIdAndDeviceAsync(user.Id, hashedDeviceIdentifier);
 
             if (existingToken is null)
             {
@@ -61,7 +63,7 @@ namespace Application.Users.Commands.Login
                     refreshToken,
                     refreshTokenExpiryDate,
                     user,
-                    request.DeviceInfo);
+                    hashedDeviceIdentifier);
             }
             else
             {

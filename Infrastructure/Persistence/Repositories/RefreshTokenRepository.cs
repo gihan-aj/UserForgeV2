@@ -18,9 +18,9 @@ namespace Infrastructure.Persistence.Repositories
             _context = context;
         }
 
-        public Task<bool> ExistsAsync(string refreshToken, string deviceInfo)
+        public Task<bool> ExistsAsync(string userId, string deviceInfo)
         {
-            return _context.RefreshTokens.AnyAsync(rt => rt.Token == refreshToken && rt.DeviceInfo == deviceInfo);
+            return _context.RefreshTokens.AnyAsync(rt => rt.UserId == userId && rt.DeviceIdentifierHash == deviceInfo);
         }
 
         public void Add(string refreshToken, DateTime expiryDate, User user, string deviceInfo)
@@ -36,14 +36,14 @@ namespace Infrastructure.Persistence.Repositories
 
         public Task<RefreshToken?> GetAsync(string refreshToken, string deviceInfo)
         {
-            return _context.RefreshTokens.SingleOrDefaultAsync(rt =>
-                rt.Token == refreshToken && rt.DeviceInfo == deviceInfo);
+            return _context.RefreshTokens.FirstOrDefaultAsync(rt =>
+                rt.Token == refreshToken && rt.DeviceIdentifierHash == deviceInfo);
         }
         
-        public Task<RefreshToken?> GetByUserIdAsync(string userId, string deviceInfo)
+        public Task<RefreshToken?> GetByUserIdAndDeviceAsync(string userId, string deviceIdentifierHash)
         {
-            return _context.RefreshTokens.SingleOrDefaultAsync(rt =>
-                rt.UserId == userId && rt.DeviceInfo == deviceInfo);
+            return _context.RefreshTokens.FirstOrDefaultAsync(rt =>
+                rt.UserId == userId && rt.DeviceIdentifierHash == deviceIdentifierHash);
         }
 
         public async Task<Result> RenewAsync(Guid id, string refreshToken, DateTime expiryDate)
@@ -60,8 +60,8 @@ namespace Infrastructure.Persistence.Repositories
 
         public async Task<bool> Validate(string refreshToken, string deviceInfo)
         {
-            var token = await _context.RefreshTokens.SingleOrDefaultAsync(rt =>
-                rt.Token == refreshToken && rt.DeviceInfo == deviceInfo);
+            var token = await _context.RefreshTokens.FirstOrDefaultAsync(rt =>
+                rt.Token == refreshToken && rt.DeviceIdentifierHash == deviceInfo);
 
             if(token is null || token.IsExpired || token.IsRevoked)
             {

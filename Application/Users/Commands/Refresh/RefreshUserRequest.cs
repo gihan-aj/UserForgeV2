@@ -1,4 +1,4 @@
 ﻿namespace Application.Users.Commands.Refresh
 {
-    public record RefreshUserRequest(string RefreshToken, string DeviceInfo);
+    public record RefreshUserRequest(string RefreshToken, string DeviceIdentifier);
 }

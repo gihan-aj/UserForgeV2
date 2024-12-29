@@ -15,7 +15,7 @@ namespace Application.Users.Commands.Login
                 .Cascade(CascadeMode.Stop)
                 .NotEmpty().WithMessage("Password is required.");
 
-            RuleFor(x => x.DeviceInfo)
+            RuleFor(x => x.DeviceIdentifier)
                 .NotEmpty().WithMessage("Device information is required.");
         }
     }

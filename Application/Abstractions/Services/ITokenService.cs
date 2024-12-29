@@ -6,5 +6,6 @@ namespace Application.Abstractions.Services
     {
         string CreateJwtToken(User user, string[] roles);
         string GenerateRefreshToken();
+        string Hash(string input);
     }
 }

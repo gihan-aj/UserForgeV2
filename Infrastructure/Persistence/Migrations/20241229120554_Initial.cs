@@ -33,7 +33,7 @@ namespace Infrastructure.Persistence.Migrations
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     FirstName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
                     LastName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
-                    DateOfBirth = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    DateOfBirth = table.Column<DateOnly>(type: "date", nullable: true),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -169,7 +169,7 @@ namespace Infrastructure.Persistence.Migrations
                     Token = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
                     ExpiryDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    DeviceInfo = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: true),
+                    DeviceIdentifierHash = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
                     IsRevoked = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>

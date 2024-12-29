@@ -38,7 +38,9 @@ namespace Application.Users.Commands.Refresh
         }
         public async Task<Result<RefreshUserResponse>> Handle(RefreshUserCommand request, CancellationToken cancellationToken)
         {
-            var existingToken = await _refreshRepository.GetAsync(request.RefreshToken, request.DeviceInfo);
+            var hashedDeviceIdentifier = _tokenService.Hash(request.DeviceIdentifier);
+
+            var existingToken = await _refreshRepository.GetAsync(request.RefreshToken, hashedDeviceIdentifier);
             if(existingToken is null)
             {
                 return Result.Failure<RefreshUserResponse>(UserErrors.Token.MissingRefreshToken);

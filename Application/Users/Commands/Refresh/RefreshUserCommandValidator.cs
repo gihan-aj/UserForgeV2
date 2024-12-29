@@ -7,7 +7,7 @@ namespace Application.Users.Commands.Refresh
         public RefreshUserCommandValidator()
         {
             RuleFor(x => x.RefreshToken).NotEmpty().WithMessage("Refresh token is required.");
-            RuleFor(x => x.DeviceInfo).NotEmpty().WithMessage("Device information is required.");
+            RuleFor(x => x.DeviceIdentifier).NotEmpty().WithMessage("Device information is required.");
         }
     }
 }

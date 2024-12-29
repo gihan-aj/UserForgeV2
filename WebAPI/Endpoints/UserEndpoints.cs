@@ -95,7 +95,7 @@ namespace WebAPI.Endpoints
                 var command = new LoginUserCommand(
                     request.Email.ToLower(),
                     request.Password,
-                    request.DeviceInfo);
+                    request.DeviceIdentifier);
 
                 var result = await sender.Send(command, cancellationToken);
                 if (result.IsFailure)
@@ -113,7 +113,7 @@ namespace WebAPI.Endpoints
                 ISender sender, 
                 CancellationToken cancellationToken) =>
             {
-                var command = new RefreshUserCommand(request.RefreshToken, request.DeviceInfo);
+                var command = new RefreshUserCommand(request.RefreshToken, request.DeviceIdentifier);
 
                 var result = await sender.Send(command, cancellationToken);
                 if (result.IsFailure)
