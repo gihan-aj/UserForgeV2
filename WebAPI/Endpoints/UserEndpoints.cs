@@ -3,12 +3,14 @@ using Application.Users.Commands.Login;
 using Application.Users.Commands.Refresh;
 using Application.Users.Commands.Register;
 using Application.Users.Commands.ResendEmailConfirmation;
+using Application.Users.Queries.GetUser;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using SharedKernal;
 using System;
+using System.Security.Claims;
 using System.Threading;
 using WebAPI.Helpers;
 
@@ -125,6 +127,28 @@ namespace WebAPI.Endpoints
             })
                 .Produces(StatusCodes.Status200OK, typeof(RefreshUserResponse))
                 .AllowAnonymous();
+
+            group.MapGet("", async (
+                HttpContext httpContext,
+                ISender sender,
+                CancellationToken cancellationToken) =>
+            {
+                var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if(string.IsNullOrEmpty(userId))
+                {
+                    return Results.Unauthorized();
+                }
+
+                var result = await sender.Send(new GetUserQuery(userId), cancellationToken);
+                if (result.IsFailure)
+                {
+                    return HandleFailure(result);
+                }
+
+                return Results.Ok(result.Value);
+            })
+                .Produces(StatusCodes.Status200OK, typeof(GetUserResponse))
+                .RequireAuthorization();
 
         }
 
