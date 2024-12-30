@@ -40,5 +40,12 @@ namespace Application.Abstractions.Services
             string lastName,
             string? phoneNumber,
             DateOnly? dateOfBirth);
+
+        Task<bool> CheckPasswordAsync(User user, string password);
+
+        Task<string?> GenerateChangeEmailTokenAsync(User user, string newEmail);
+
+        Task<Result> ChangeEmailAsync(User user, string newEmail, string token);
+
     }
 }

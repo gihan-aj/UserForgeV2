@@ -1,10 +1,12 @@
-﻿using Application.Users.Commands.ChangePassword;
+﻿using Application.Users.Commands.ChangeEmail;
+using Application.Users.Commands.ChangePassword;
 using Application.Users.Commands.ConfirmEmail;
 using Application.Users.Commands.Login;
 using Application.Users.Commands.Refresh;
 using Application.Users.Commands.Register;
 using Application.Users.Commands.ResendEmailConfirmation;
 using Application.Users.Commands.ResetPassword;
+using Application.Users.Commands.SendEmailChange;
 using Application.Users.Commands.SendPasswordReset;
 using Application.Users.Commands.Update;
 using Application.Users.Queries.GetUser;
@@ -12,11 +14,9 @@ using Domain.Users;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Routing;
 using SharedKernal;
 using System;
-using System.Net.Http;
 using System.Security.Claims;
 using System.Threading;
 using WebAPI.Helpers;
@@ -243,6 +243,63 @@ namespace WebAPI.Endpoints
                     request.LastName.ToLower(),
                     string.IsNullOrWhiteSpace(request.PhoneNumber) ? null : request.PhoneNumber,
                     request.DateOfBirth.HasValue ? request.DateOfBirth : null);
+
+                var result = await sender.Send(command, cancellationToken);
+                if (result.IsFailure)
+                {
+                    return HandleFailure(result);
+                }
+
+                return Results.NoContent();
+            })
+                .Produces(StatusCodes.Status204NoContent)
+                .RequireAuthorization();
+
+            group.MapPost("send-email-change-link", async (
+                SendEmailChangeRequest request,
+                HttpContext httpContext,
+                ISender sender,
+                CancellationToken cancellationToken) =>
+            {
+                var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Results.Unauthorized();
+                }
+
+                var command = new SendEmailChangeCommand(
+                    userId,
+                    request.NewEmail.ToLower(),
+                    request.Password);
+
+                var result = await sender.Send(command, cancellationToken);
+                if (result.IsFailure)
+                {
+                    return HandleFailure(result);
+                }
+
+                return Results.NoContent();
+            })
+                .Produces(StatusCodes.Status204NoContent)
+                .RequireAuthorization();
+
+            group.MapPut("change-email", async (
+                ChangeEmailRequest request,
+                HttpContext httpContext,
+                ISender sender,
+                CancellationToken cancellationToken) =>
+            {
+                var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Results.Unauthorized();
+                }
+
+                var command = new ChangeEmailCommand(
+                    userId,
+                    request.Token,
+                    request.NewEmail.ToLower(),
+                    request.Password);
 
                 var result = await sender.Send(command, cancellationToken);
                 if (result.IsFailure)

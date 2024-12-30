@@ -27,6 +27,10 @@ namespace Infrastructure
             services.AddIdentityCore<User>(options =>
             {
                 options.SignIn.RequireConfirmedEmail = true;
+
+                options.Tokens.EmailConfirmationTokenProvider = TokenOptions.DefaultEmailProvider;
+                options.Tokens.ChangeEmailTokenProvider = TokenOptions.DefaultEmailProvider;
+                options.Tokens.PasswordResetTokenProvider = TokenOptions.DefaultProvider;
             })
                 .AddRoles<IdentityRole<string>>()
                 .AddRoleManager<RoleManager<IdentityRole<string>>>()

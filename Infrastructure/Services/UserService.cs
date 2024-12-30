@@ -241,6 +241,42 @@ namespace Infrastructure.Services
             return Result.Success();
         }
 
+        public async Task<bool> CheckPasswordAsync(User user, string password)
+        {
+            var isPasswordValid = await _userManager.CheckPasswordAsync(user, password);
+            return isPasswordValid;
+        }
+
+        public async Task<string?> GenerateChangeEmailTokenAsync(User user, string newEmail)
+        {
+            var token = await _userManager.GenerateChangeEmailTokenAsync(user, newEmail);
+
+            return token;
+        }
+
+        public async Task<Result> ChangeEmailAsync(User user, string newEmail, string token)
+        {
+            var decodedTokenBytes = WebEncoders.Base64UrlDecode(token);
+            var decodedToken = Encoding.UTF8.GetString(decodedTokenBytes);
+
+            var emailChangeResult = await _userManager.ChangeEmailAsync(user, newEmail, decodedToken);
+            if (!emailChangeResult.Succeeded)
+            {
+                return CreateIdentityError(emailChangeResult.Errors);
+            }
+
+            user.NormalizedEmail = _userManager.NormalizeEmail(user.Email);
+            user.UserName = newEmail;
+            user.EmailConfirmed = true;
+            var updateResult = await _userManager.UpdateAsync(user);
+            if (!updateResult.Succeeded)
+            {
+                return CreateIdentityError(updateResult.Errors);
+            }
+
+            return Result.Success();
+        }
+
         private Result<T> CreateIdentityError<T>(IEnumerable<IdentityError> errors)
         {
             var subErrors = errors
