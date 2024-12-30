@@ -3,11 +3,13 @@ using Application.Users.Commands.Login;
 using Application.Users.Commands.Refresh;
 using Application.Users.Commands.Register;
 using Application.Users.Commands.ResendEmailConfirmation;
+using Application.Users.Commands.ResetPassword;
 using Application.Users.Commands.SendPasswordReset;
 using Application.Users.Queries.GetUser;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Routing;
 using SharedKernal;
 using System;
@@ -166,6 +168,25 @@ namespace WebAPI.Endpoints
             })
                 .Produces(StatusCodes.Status204NoContent)
                 .RequireAuthorization();
+
+            group.MapPut("reset-password", async (
+                Application.Users.Commands.ResetPassword.ResetPasswordRequest request,
+                ISender sender,
+                CancellationToken cancellationToken) =>
+            {
+                var command = new ResetPasswordCommand(
+                    request.UserId, 
+                    request.Token, 
+                    request.NewPassword);
+
+                var result = await sender.Send(command, cancellationToken);
+                if(result.IsFailure)
+                {
+                    return HandleFailure(result);
+                }
+
+                return Results.NoContent();
+            });
 
         }
 
