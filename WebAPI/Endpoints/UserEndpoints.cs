@@ -6,6 +6,7 @@ using Application.Users.Commands.Register;
 using Application.Users.Commands.ResendEmailConfirmation;
 using Application.Users.Commands.ResetPassword;
 using Application.Users.Commands.SendPasswordReset;
+using Application.Users.Commands.Update;
 using Application.Users.Queries.GetUser;
 using Domain.Users;
 using MediatR;
@@ -212,6 +213,36 @@ namespace WebAPI.Endpoints
                     userId, 
                     request.CurrentPassword, 
                     request.NewPassword);
+
+                var result = await sender.Send(command, cancellationToken);
+                if (result.IsFailure)
+                {
+                    return HandleFailure(result);
+                }
+
+                return Results.NoContent();
+            })
+                .Produces(StatusCodes.Status204NoContent)
+                .RequireAuthorization();
+
+            group.MapPut("update", async (
+                UpdateUserRequest request,
+                HttpContext httpContext,
+                ISender sender,
+                CancellationToken cancellationToken) =>
+            {
+                var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Results.Unauthorized();
+                }
+
+                var command = new UpdateUserCommand(
+                    userId,
+                    request.FirstName.ToLower(),
+                    request.LastName.ToLower(),
+                    string.IsNullOrWhiteSpace(request.PhoneNumber) ? null : request.PhoneNumber,
+                    request.DateOfBirth.HasValue ? request.DateOfBirth : null);
 
                 var result = await sender.Send(command, cancellationToken);
                 if (result.IsFailure)

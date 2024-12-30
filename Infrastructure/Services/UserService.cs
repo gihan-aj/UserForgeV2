@@ -209,6 +209,38 @@ namespace Infrastructure.Services
             return Result.Success();
         }
 
+        public async Task<Result> UpdateUserAsync(
+            string userId, 
+            string firstName, 
+            string lastName, 
+            string? phoneNumber, 
+            DateOnly? dateOfBirth)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user is null)
+            {
+                return UserErrors.NotFound.User(userId);
+            }
+
+            user.FirstName = firstName;
+            user.LastName = lastName;
+            if (!string.IsNullOrWhiteSpace(phoneNumber))
+                user.PhoneNumber = phoneNumber;
+
+            if (dateOfBirth.HasValue)
+            {
+                user.DateOfBirth = dateOfBirth;
+            }
+
+            var updatedResult = await _userManager.UpdateAsync(user);
+            if (!updatedResult.Succeeded)
+            {
+                return CreateIdentityError(updatedResult.Errors);
+            }
+
+            return Result.Success();
+        }
+
         private Result<T> CreateIdentityError<T>(IEnumerable<IdentityError> errors)
         {
             var subErrors = errors

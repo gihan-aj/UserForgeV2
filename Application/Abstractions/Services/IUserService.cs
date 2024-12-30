@@ -33,5 +33,12 @@ namespace Application.Abstractions.Services
         Task<Result> ResetPasswordAsync(string userId, string token, string newPassword);
 
         Task<Result> ChangePasswordAsync(string userId, string currentPassword, string newPassword);
+
+        Task<Result> UpdateUserAsync(
+            string userId,
+            string firstName,
+            string lastName,
+            string? phoneNumber,
+            DateOnly? dateOfBirth);
     }
 }

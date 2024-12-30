@@ -2,26 +2,12 @@
 using System.Text.RegularExpressions;
 using System;
 
-namespace Application.Users.Commands.Register
+namespace Application.Users.Commands.Update
 {
-    public sealed class RegisterUserCommandValidator : AbstractValidator<RegisterUserCommand>
+    public class UpdateUserCommandValidator : AbstractValidator<UpdateUserCommand>
     {
-        public RegisterUserCommandValidator()
+        public UpdateUserCommandValidator()
         {
-            RuleFor(x => x.Email)
-                .Cascade(CascadeMode.Stop)
-                .NotEmpty().WithMessage("Email is required.")
-                .EmailAddress().WithMessage("Please provide a valid email address.");
-
-            RuleFor(x => x.Password)
-                .Cascade(CascadeMode.Stop)
-                .NotEmpty().WithMessage("Password is required.")
-                .MinimumLength(6).WithMessage("Password must be at least 6 characters long.")
-                .Matches("[A-Z]").WithMessage("Password must contain at least one uppercase letter.")
-                .Matches("[a-z]").WithMessage("Password must contain at least one lowercase letter.")
-                .Matches("[0-9]").WithMessage("Password must contain at least one numeric digit.")
-                .Matches("[^a-zA-Z0-9]").WithMessage("Password must contain at least one special character.");
-
             RuleFor(x => x.FirstName)
                 .Cascade(CascadeMode.Stop)
                 .NotEmpty().WithMessage("First Name is required.")
