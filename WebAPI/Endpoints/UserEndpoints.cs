@@ -1,4 +1,5 @@
-﻿using Application.Users.Commands.ConfirmEmail;
+﻿using Application.Users.Commands.ChangePassword;
+using Application.Users.Commands.ConfirmEmail;
 using Application.Users.Commands.Login;
 using Application.Users.Commands.Refresh;
 using Application.Users.Commands.Register;
@@ -6,6 +7,7 @@ using Application.Users.Commands.ResendEmailConfirmation;
 using Application.Users.Commands.ResetPassword;
 using Application.Users.Commands.SendPasswordReset;
 using Application.Users.Queries.GetUser;
+using Domain.Users;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -13,6 +15,7 @@ using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Routing;
 using SharedKernal;
 using System;
+using System.Net.Http;
 using System.Security.Claims;
 using System.Threading;
 using WebAPI.Helpers;
@@ -187,6 +190,39 @@ namespace WebAPI.Endpoints
 
                 return Results.NoContent();
             });
+
+            group.MapPut("change-password", async (
+                ChangePasswordRequest request,
+                HttpContext httpContext,
+                ISender sender,
+                CancellationToken cancellationToken) =>
+            {
+                var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Results.Unauthorized();
+                }
+
+                if(request.NewPassword != request.ConfirmNewPassword)
+                {
+                    return HandleFailure(Result.Failure(UserErrors.Validation.PasswordMismatch));
+                }
+
+                var command = new ChangePasswordCommand(
+                    userId, 
+                    request.CurrentPassword, 
+                    request.NewPassword);
+
+                var result = await sender.Send(command, cancellationToken);
+                if (result.IsFailure)
+                {
+                    return HandleFailure(result);
+                }
+
+                return Results.NoContent();
+            })
+                .Produces(StatusCodes.Status204NoContent)
+                .RequireAuthorization();
 
         }
 

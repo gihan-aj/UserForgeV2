@@ -31,5 +31,7 @@ namespace Application.Abstractions.Services
         Task<string?> GeneratePasswordResetTokenAsync(User user);
 
         Task<Result> ResetPasswordAsync(string userId, string token, string newPassword);
+
+        Task<Result> ChangePasswordAsync(string userId, string currentPassword, string newPassword);
     }
 }

@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static Domain.Users.UserErrors;
 
 namespace Infrastructure.Services
 {
@@ -179,6 +180,28 @@ namespace Infrastructure.Services
 
             var result = await _userManager.ResetPasswordAsync(user, decodedToken, newPassword);
             if(!result.Succeeded)
+            {
+                return CreateIdentityError(result.Errors);
+            }
+
+            return Result.Success();
+        }
+
+        public async Task<Result> ChangePasswordAsync(string userId, string currentPassword, string newPassword)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user is null)
+            {
+                return UserErrors.NotFound.User(userId);
+            }
+
+            if (!user.EmailConfirmed)
+            {
+                return UserErrors.Authorization.EmailNotConfirmed(userId);
+            }
+
+            var result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
+            if (!result.Succeeded)
             {
                 return CreateIdentityError(result.Errors);
             }
