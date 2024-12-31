@@ -1,6 +1,4 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.ComponentModel.DataAnnotations;
 using System;
 
 namespace Domain.Users
@@ -14,5 +12,15 @@ namespace Domain.Users
         public DateOnly? DateOfBirth { get; set; }
 
         public bool IsActive { get; private set; } = true;
+
+        public void Activate()
+        {
+            IsActive = true;
+        }
+
+        public void Deactivate()
+        {
+            IsActive = false;
+        }
     }
 }

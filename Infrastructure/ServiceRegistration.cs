@@ -13,6 +13,7 @@ namespace Infrastructure
             services.AddTransient<IEmailService, EmailService>();
             services.AddTransient<IUserService, UserService>();
             services.AddTransient<ITokenService, TokenService>();
+            services.AddTransient<IUserManagementService, UserManagementService>();
 
             services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 

@@ -21,6 +21,7 @@ namespace WebAPI.Extensions
                 .WithApiVersionSet(apiVersionSet);
 
             versionedGroup.MapUserEndpoints();
+            versionedGroup.MapUserManagementEndpoints();
         } 
     }
 }
