@@ -225,7 +225,7 @@ namespace WebAPI.Endpoints
                 .Produces(StatusCodes.Status204NoContent)
                 .RequireAuthorization();
 
-            group.MapPut("update", async (
+            group.MapPut("update-user", async (
                 UpdateUserRequest request,
                 HttpContext httpContext,
                 ISender sender,
