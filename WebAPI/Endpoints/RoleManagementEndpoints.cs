@@ -1,4 +1,5 @@
 ﻿using Application.Roles.Commands.Create;
+using Application.Roles.Commands.Update;
 using Domain.Roles;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
@@ -39,6 +40,21 @@ namespace WebAPI.Endpoints
                     });
             })
                 .Produces(StatusCodes.Status201Created);
+
+            group.MapPut("update", async (
+                UpdateRoleRequest request,
+                ISender sender,
+                CancellationToken cancellationToken) =>
+            {
+                var command = new UpdateRoleCommand(request.RoleId, request.RoleName.ToLower());
+                var result = await sender.Send(command, cancellationToken);
+                if (result.IsFailure)
+                {
+                    return HandleFailure(result);
+                }
+
+                return Results.NoContent();
+            });
         }
 
         private static IResult HandleFailure(Result result) =>

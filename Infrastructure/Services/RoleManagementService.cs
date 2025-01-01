@@ -38,6 +38,26 @@ namespace Infrastructure.Services
             return role.Id;
         }
 
+        public async Task<Result> UpdateAsync(string roleId, string roleName)
+        {
+            var role = await _roleManager.FindByIdAsync(roleId);
+            if(role is null)
+            {
+                return RoleErrors.NotFound.Role(roleId);
+            }
+
+            role.Name = roleName;
+            role.NormalizedName = _roleManager.NormalizeKey(roleName);
+
+            var result = await _roleManager.UpdateAsync(role);
+            if (!result.Succeeded)
+            {
+                return CreateIdentityError(result.Errors);
+            }
+
+            return Result.Success();
+        }
+
         private Result CreateIdentityError(IEnumerable<IdentityError> errors)
         {
             var subErrors = errors
