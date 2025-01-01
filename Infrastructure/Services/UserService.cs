@@ -1,5 +1,6 @@
 ﻿using Application.Abstractions.Services;
 using Application.Users.Commands.Login;
+using Domain.Roles;
 using Domain.Users;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;

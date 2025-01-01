@@ -3,7 +3,7 @@ using Application.Shared.Requesets;
 using Application.Users.Commands.Activate;
 using Application.Users.Commands.Deactivate;
 using Application.Users.Queries.GetAll;
-using Domain.Users;
+using Domain.Roles;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;

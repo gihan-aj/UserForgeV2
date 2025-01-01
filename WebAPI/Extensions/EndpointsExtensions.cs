@@ -22,6 +22,7 @@ namespace WebAPI.Extensions
 
             versionedGroup.MapUserEndpoints();
             versionedGroup.MapUserManagementEndpoints();
+            versionedGroup.MapRoleManagementEndpoints();
         } 
     }
 }
