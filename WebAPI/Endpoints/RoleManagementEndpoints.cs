@@ -1,5 +1,6 @@
 ﻿using Application.Roles.Commands.Create;
 using Application.Roles.Commands.Update;
+using Application.Roles.Queries.GetAll;
 using Domain.Roles;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
@@ -54,6 +55,27 @@ namespace WebAPI.Endpoints
                 }
 
                 return Results.NoContent();
+            });
+
+            group.MapGet("", async (
+                string? searchTerm,
+                string? sortColumn,
+                string? sortOrder,
+                int page,
+                int pageSize,
+                ISender sender,
+                CancellationToken cancellationToken) =>
+            {
+                var query = new GetAllRolesQuery(
+                    searchTerm,
+                    sortColumn,
+                    sortOrder,
+                    page,
+                    pageSize);
+
+                var result = await sender.Send(query, cancellationToken);
+
+                return Results.Ok(result.Value);
             });
         }
 
