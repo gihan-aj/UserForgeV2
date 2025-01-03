@@ -70,5 +70,19 @@ namespace Infrastructure.Persistence.Repositories
 
             return true;
         }
+
+        public async Task<Result> RemoveAsync(string userId, string deviceIdentifierHash)
+        {
+            var tokenData = await _context.RefreshTokens.FirstOrDefaultAsync(rt =>
+                rt.UserId == userId && rt.DeviceIdentifierHash == deviceIdentifierHash);
+
+            if (tokenData is null)
+            {
+                return UserErrors.Conflict.AlreadyLoggedOut(userId);
+            }
+
+            _context.RefreshTokens.Remove(tokenData);
+            return Result.Success();
+        }
     }
 }

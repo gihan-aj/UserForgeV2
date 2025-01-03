@@ -27,6 +27,7 @@ namespace Domain.Users
             public static Error EmailAlreadyExists(string email) => new("EmailAlreadyExists", $"An account with email: {email} already exists.");
             public static Error UsernameAlreadyExists(string username) => new("UsernameAlreadyExists", $"An account with username: {username} already exists.");
             public static Error EmailAlreadyConfirmed(string email) => new("EmailAlreadyConfirmed", $"The email: {email} is already confirmed. You can log in.");
+            public static Error AlreadyLoggedOut(string userId) => new("AlreadyLoggedOut", $"The user: {userId} is already logged out from this device.");
         }
 
         public static class Token

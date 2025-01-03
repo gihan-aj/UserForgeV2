@@ -3,6 +3,7 @@ using Application.Abstractions.Messaging;
 using Application.Abstractions.Repositories;
 using Application.Abstractions.Services;
 using Application.Settings;
+using Application.Users.Commands.Login;
 using Domain.Users;
 using Microsoft.Extensions.Options;
 using SharedKernal;
@@ -62,6 +63,8 @@ namespace Application.Users.Commands.Refresh
             var rolesResult = await _userService.GetRolesAsync(user);
             var roles = rolesResult.Value;
 
+            var userInfo = new BasicUserInfo(user.Id, user.FirstName, user.LastName, roles);
+
             var accessToken = _tokenService.CreateJwtToken(user, roles);
 
             string refreshToken = _tokenService.GenerateRefreshToken();
@@ -76,7 +79,7 @@ namespace Application.Users.Commands.Refresh
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            var refreshUserResponse = new RefreshUserResponse(accessToken, refreshToken);
+            var refreshUserResponse = new RefreshUserResponse(accessToken, refreshToken, userInfo);
             return Result.Success(refreshUserResponse);
         }
     }

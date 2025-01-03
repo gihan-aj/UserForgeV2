@@ -43,14 +43,14 @@ namespace Application.Behaviors
                 .Distinct()
                 .ToArray();
 
-            _logger.LogError(
+            if (errors.Any())
+            {
+                _logger.LogError(
                   "Validation Errors: {@RequestName}, {@Error}, {@DateTimeUtc}",
                   typeof(TRequest).Name,
                   String.Join(", ", errors.Select(err => err.Code)),
                   DateTime.UtcNow);
 
-            if (errors.Any())
-            {
                 return CreateValidationResult<TResponse>(errors);
             }
 

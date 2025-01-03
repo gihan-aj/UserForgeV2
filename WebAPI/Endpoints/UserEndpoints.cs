@@ -2,6 +2,7 @@
 using Application.Users.Commands.ChangePassword;
 using Application.Users.Commands.ConfirmEmail;
 using Application.Users.Commands.Login;
+using Application.Users.Commands.Logout;
 using Application.Users.Commands.Refresh;
 using Application.Users.Commands.Register;
 using Application.Users.Commands.ResendEmailConfirmation;
@@ -311,6 +312,31 @@ namespace WebAPI.Endpoints
             })
                 .Produces(StatusCodes.Status204NoContent)
                 .RequireAuthorization();
+            
+            group.MapPut("logout", async (
+                LogoutUserRequest request,
+                HttpContext httpContext,
+                ISender sender,
+                CancellationToken cancellationToken) =>
+            {
+                var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Results.Unauthorized();
+                }
+
+                var command = new LogoutUserCommand(userId, request.DeviceIdentifier);
+
+                var result = await sender.Send(command, cancellationToken);
+                if (result.IsFailure)
+                {
+                    return HandleFailure(result);
+                }
+
+                return Results.NoContent();
+            })
+                .Produces(StatusCodes.Status204NoContent)
+                .RequireAuthorization();
 
         }
 
@@ -372,19 +398,19 @@ namespace WebAPI.Endpoints
                 { Error: { Code: "MissingRefreshToken" } } =>
                 Results.Problem(ErrorHandler.CreateProblemDetails(
                     "Token Error",
-                    StatusCodes.Status401Unauthorized,
+                    StatusCodes.Status400BadRequest,
                     result.Error)),
 
                 { Error: { Code: "InvalidRefreshToken" } } =>
                 Results.Problem(ErrorHandler.CreateProblemDetails(
                     "Token Error",
-                    StatusCodes.Status401Unauthorized,
+                    StatusCodes.Status400BadRequest,
                     result.Error)),
 
                 { Error: { Code: "InvalidAccessToken" } } =>
                 Results.Problem(ErrorHandler.CreateProblemDetails(
                     "Token Error",
-                    StatusCodes.Status401Unauthorized,
+                    StatusCodes.Status400BadRequest,
                     result.Error)),
 
                 { Error: { Code: "PasswordMismatch" } } =>

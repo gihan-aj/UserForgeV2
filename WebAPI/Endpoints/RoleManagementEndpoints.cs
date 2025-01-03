@@ -55,7 +55,8 @@ namespace WebAPI.Endpoints
                 }
 
                 return Results.NoContent();
-            });
+            })
+                .Produces(StatusCodes.Status204NoContent);
 
             group.MapGet("", async (
                 string? searchTerm,
@@ -76,7 +77,9 @@ namespace WebAPI.Endpoints
                 var result = await sender.Send(query, cancellationToken);
 
                 return Results.Ok(result.Value);
-            });
+            })
+                .Produces(StatusCodes.Status204NoContent);
+;
         }
 
         private static IResult HandleFailure(Result result) =>
@@ -85,22 +88,28 @@ namespace WebAPI.Endpoints
                 { IsSuccess: true } => throw new InvalidOperationException(),
 
                 { Error: { Code: "ValidationError" } } =>
-                Results.BadRequest(ErrorHandler.CreateProblemDetails(
+                Results.Problem(ErrorHandler.CreateProblemDetails(
                     "Validation Errors",
                     StatusCodes.Status400BadRequest,
                     result.Error,
                     result.Error.Details.ToArray())),
 
                 { Error: { Code: "IdentityError" } } =>
-                Results.BadRequest(ErrorHandler.CreateProblemDetails(
+                Results.Problem(ErrorHandler.CreateProblemDetails(
                     "Validation Errors",
                     StatusCodes.Status400BadRequest,
                     result.Error,
                     result.Error.Details.ToArray())),
 
                 { Error: { Code: "RoleNotFound" } } =>
-                Results.NotFound(ErrorHandler.CreateProblemDetails(
+                Results.Problem(ErrorHandler.CreateProblemDetails(
                     "Role Not Found",
+                    StatusCodes.Status404NotFound,
+                    result.Error)),
+                
+                { Error: { Code: "UserRolesNotFound" } } =>
+                Results.Problem(ErrorHandler.CreateProblemDetails(
+                    "User Roles Not Found",
                     StatusCodes.Status404NotFound,
                     result.Error)),
 

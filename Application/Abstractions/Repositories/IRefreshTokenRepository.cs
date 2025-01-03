@@ -19,5 +19,7 @@ namespace Application.Abstractions.Repositories
         Task<Result> RenewAsync(Guid id, string refreshToken, DateTime expiryDate);
 
         Task<bool> Validate(string refreshToken, string deviceInfo);
+
+        Task<Result> RemoveAsync(string userId, string deviceIdentifierHash);
     }
 }

@@ -9,7 +9,6 @@ using System;
 using System.Threading.Tasks;
 using System.Linq;
 using Application.Shared.Pagination;
-using Application.Users.Queries.GetAll;
 using System.Threading;
 using Application.Roles.Queries.GetAll;
 
