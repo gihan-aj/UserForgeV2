@@ -20,6 +20,7 @@ namespace Application.Users.Commands.Refresh
         private readonly ITokenService _tokenService;
         private readonly TokenSettings _tokenSettings;
         private readonly IRefreshTokenRepository _refreshTokenRepository;
+        private readonly IUserSettingsRepository _userSettingsRepository;
         private readonly IUnitOfWork _unitOfWork;
 
         public RefreshUserCommandHandler(
@@ -28,7 +29,8 @@ namespace Application.Users.Commands.Refresh
             ITokenService tokenService,
             IOptions<TokenSettings> tokenSettings,
             IRefreshTokenRepository refreshTokenRepository,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            IUserSettingsRepository userSettingsRepository)
         {
             _refreshRepository = refreshRepository;
             _userService = userService;
@@ -36,6 +38,7 @@ namespace Application.Users.Commands.Refresh
             _tokenSettings = tokenSettings.Value;
             _refreshTokenRepository = refreshTokenRepository;
             _unitOfWork = unitOfWork;
+            _userSettingsRepository = userSettingsRepository;
         }
         public async Task<Result<RefreshUserResponse>> Handle(RefreshUserCommand request, CancellationToken cancellationToken)
         {
@@ -63,8 +66,6 @@ namespace Application.Users.Commands.Refresh
             var rolesResult = await _userService.GetRolesAsync(user);
             var roles = rolesResult.Value;
 
-            var userInfo = new BasicUserInfo(user.Id, user.FirstName, user.LastName, roles);
-
             var accessToken = _tokenService.CreateJwtToken(user, roles);
 
             string refreshToken = _tokenService.GenerateRefreshToken();
@@ -79,7 +80,19 @@ namespace Application.Users.Commands.Refresh
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            var refreshUserResponse = new RefreshUserResponse(accessToken, refreshToken, userInfo);
+            var refreshUserResponse = new RefreshUserResponse(user, roles, accessToken, refreshToken);
+
+            var settings = await _userSettingsRepository.GetByUserIdAsync(user.Id);
+            if (settings is not null)
+            {
+                refreshUserResponse.UserSettings = new BasicUserSettings(
+                    settings.Theme,
+                    settings.Language,
+                    settings.DateFormat,
+                    settings.TimeFormat,
+                    settings.TimeZone);
+            }
+
             return Result.Success(refreshUserResponse);
         }
     }

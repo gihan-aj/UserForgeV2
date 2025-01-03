@@ -1,4 +1,6 @@
-﻿using Application.Abstractions.Messaging;
+﻿using Application.Abstractions.Data;
+using Application.Abstractions.Messaging;
+using Application.Abstractions.Repositories;
 using Application.Abstractions.Services;
 using Domain.Users;
 using SharedKernal;
@@ -11,11 +13,19 @@ namespace Application.Users.Commands.Register
     {
         private readonly IUserService _userService;
         private readonly IEmailService _emailService;
+        private readonly IUserSettingsRepository _userSettingsRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public RegisterUserCommandHandler(IUserService userService, IEmailService emailService)
+        public RegisterUserCommandHandler(
+            IUserService userService,
+            IEmailService emailService,
+            IUserSettingsRepository userSettingsRepository,
+            IUnitOfWork unitOfWork)
         {
             _userService = userService;
             _emailService = emailService;
+            _userSettingsRepository = userSettingsRepository;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<Result<string>> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
@@ -35,6 +45,9 @@ namespace Application.Users.Commands.Register
 
             var newUser = newUserResult.Value;
 
+            var settings = new UserSettings(newUser.Id);
+            _userSettingsRepository.Add(settings);
+
             var tokenResult = await _userService.GenerateEmailConfirmationTokenAsync(newUser);
             if (tokenResult.IsFailure)
             {
@@ -47,6 +60,8 @@ namespace Application.Users.Commands.Register
             {
                 return Result.Failure<string>(emailResult.Error);
             }
+
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             return newUser.Id;       
         }

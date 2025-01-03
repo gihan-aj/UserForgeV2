@@ -14,6 +14,8 @@ namespace Infrastructure.Persistence
     {
         public DbSet<RefreshToken> RefreshTokens { get; set; }
 
+        public DbSet<UserSettings> UserSettings { get; set; }
+
         public ApplicationDbContext(DbContextOptions options) : base(options) { }
 
         protected override void OnModelCreating(ModelBuilder builder)

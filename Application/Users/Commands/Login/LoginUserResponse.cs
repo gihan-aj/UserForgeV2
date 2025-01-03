@@ -16,5 +16,7 @@ namespace Application.Users.Commands.Login
         public string? RefreshToken { get; private set; } = null;
 
         public BasicUserInfo User {  get; private set; }
+
+        public BasicUserSettings? UserSettings { get; set; } = null;
     }
 }

@@ -9,7 +9,11 @@ namespace Application.Abstractions.Data
     public interface IApplicationDbContext
     {
         public DbSet<RefreshToken> RefreshTokens { get; set; }
+
+        public DbSet<UserSettings> UserSettings { get; set; }
+
         DatabaseFacade Database { get; }
+
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     }
 }

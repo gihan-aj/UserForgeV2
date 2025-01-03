@@ -16,22 +16,25 @@ namespace Application.Users.Commands.Login
         private readonly IUserService _userService;
         private readonly ITokenService _tokenService;
         private readonly IRefreshTokenRepository _refreshTokenRepository;
+        private readonly IUserSettingsRepository _userSettingsRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly TokenSettings _tokenSettings;
 
 
         public LoginUserCommandHandler(
-            IUserService userService, 
-            IRefreshTokenRepository refreshTokenRepository, 
-            ITokenService tokenService, 
+            IUserService userService,
+            IRefreshTokenRepository refreshTokenRepository,
+            ITokenService tokenService,
             IUnitOfWork unitOfWork,
-            IOptions<TokenSettings> tokenSettings)
+            IOptions<TokenSettings> tokenSettings,
+            IUserSettingsRepository userSettingsRepository)
         {
             _userService = userService;
             _tokenService = tokenService;
             _refreshTokenRepository = refreshTokenRepository;
             _unitOfWork = unitOfWork;
             _tokenSettings = tokenSettings.Value;
+            _userSettingsRepository = userSettingsRepository;
         }
 
         public async Task<Result<LoginUserResponse>> Handle(LoginUserCommand request, CancellationToken cancellationToken)
@@ -77,6 +80,17 @@ namespace Application.Users.Commands.Login
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             var loginResponse = new LoginUserResponse(user, roles, accessToken, refreshToken);
+
+            var settings = await _userSettingsRepository.GetByUserIdAsync(user.Id);
+            if(settings is not null)
+            {
+                loginResponse.UserSettings = new BasicUserSettings(
+                    settings.Theme,
+                    settings.Language,
+                    settings.DateFormat,
+                    settings.TimeFormat,
+                    settings.TimeZone);
+            }
 
             return Result.Success(loginResponse);
         }

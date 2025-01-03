@@ -17,6 +17,7 @@ namespace Infrastructure
             services.AddTransient<IRoleManagementService, RoleManagementService>();
 
             services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+            services.AddScoped<IUserSettingsRepository, UserSettingsRepository>();
 
             return services;
         }

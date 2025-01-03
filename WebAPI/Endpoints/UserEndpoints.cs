@@ -11,6 +11,7 @@ using Application.Users.Commands.SendEmailChange;
 using Application.Users.Commands.SendPasswordReset;
 using Application.Users.Commands.Update;
 using Application.Users.Queries.GetUser;
+using Application.Users.Queries.GetUserSettings;
 using Domain.Users;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
@@ -21,6 +22,7 @@ using System;
 using System.Security.Claims;
 using System.Threading;
 using WebAPI.Helpers;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace WebAPI.Endpoints
 {
@@ -312,7 +314,29 @@ namespace WebAPI.Endpoints
             })
                 .Produces(StatusCodes.Status204NoContent)
                 .RequireAuthorization();
-            
+
+            group.MapGet("user-settings", async (
+                HttpContext httpContext,
+                ISender sender,
+                CancellationToken cancellationToken) =>
+            {
+                var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Results.Unauthorized();
+                }
+
+                var result = await sender.Send(new GetUserSettingsQuery(userId), cancellationToken);
+                if (result.IsFailure)
+                {
+                    return HandleFailure(result);
+                }
+
+                return Results.Ok(result.Value);
+            })
+                .Produces(StatusCodes.Status200OK)
+                .RequireAuthorization();
+
             group.MapPut("logout", async (
                 LogoutUserRequest request,
                 HttpContext httpContext,
