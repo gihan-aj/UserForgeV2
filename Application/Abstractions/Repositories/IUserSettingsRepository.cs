@@ -7,5 +7,6 @@ namespace Application.Abstractions.Repositories
     {
         void Add(UserSettings userSettings);
         Task<UserSettings?> GetByUserIdAsync(string userId);
+        void Update(UserSettings userSettings);
     }
 }

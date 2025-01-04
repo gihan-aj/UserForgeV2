@@ -10,6 +10,7 @@ using Application.Users.Commands.ResetPassword;
 using Application.Users.Commands.SendEmailChange;
 using Application.Users.Commands.SendPasswordReset;
 using Application.Users.Commands.Update;
+using Application.Users.Commands.UpdateUserSettings;
 using Application.Users.Queries.GetUser;
 using Application.Users.Queries.GetUserSettings;
 using Domain.Users;
@@ -335,6 +336,40 @@ namespace WebAPI.Endpoints
                 return Results.Ok(result.Value);
             })
                 .Produces(StatusCodes.Status200OK)
+                .RequireAuthorization();
+
+            group.MapPut("update-user-settings", async (
+                UpdateUserSettingsRequest request,
+                HttpContext httpContext,
+                ISender sender,
+                CancellationToken cancellationToken) =>
+            {
+                var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Results.Unauthorized();
+                }
+
+                var command = new UpdateUserSettingsCommand(
+                    userId,
+                    request.Theme,
+                    request.Language,
+                    request.DateFormat,
+                    request.TimeFormat,
+                    request.TimeZone,
+                    request.NotificationsEnabled,
+                    request.EmailNotification,
+                    request.SmsNotification);
+
+                var result = await sender.Send(command, cancellationToken);
+                if (result.IsFailure)
+                {
+                    return HandleFailure(result);
+                }
+
+                return Results.NoContent();
+            })
+                .Produces(StatusCodes.Status204NoContent)
                 .RequireAuthorization();
 
             group.MapPut("logout", async (

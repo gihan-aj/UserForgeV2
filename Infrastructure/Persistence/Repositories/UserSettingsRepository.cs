@@ -25,5 +25,10 @@ namespace Infrastructure.Persistence.Repositories
             var settings = await _context.UserSettings.FirstOrDefaultAsync(us => us.UserId == userId);
             return settings;
         }
+
+        public void Update(UserSettings userSettings)
+        {
+            _context.UserSettings.Update(userSettings);
+        }   
     }
 }

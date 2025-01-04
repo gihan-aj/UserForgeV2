@@ -32,6 +32,27 @@ namespace Domain.Users
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
 
+        public void Update(
+            string theme, 
+            string language, 
+            string dateFormat, 
+            string timeFormat, 
+            string timeZone, 
+            bool notificationsEnabled, 
+            bool emailNotification, 
+            bool smsNotification)
+        {
+            Theme = theme;
+            Language = language;
+            DateFormat = dateFormat;
+            TimeFormat = timeFormat;
+            TimeZone = timeZone;
+            NotificationsEnabled = notificationsEnabled;
+            EmailNotification = emailNotification;
+            SmsNotification = smsNotification;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
     }
 
 }
