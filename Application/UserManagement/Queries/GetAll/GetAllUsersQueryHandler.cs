@@ -5,7 +5,7 @@ using SharedKernal;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Application.Users.Queries.GetAll
+namespace Application.UserManagement.Queries.GetAll
 {
     internal sealed class GetAllUsersQueryHandler : IQueryHandler<GetAllUsersQuery, PaginatedList<GetAllUsersResponse>>
     {

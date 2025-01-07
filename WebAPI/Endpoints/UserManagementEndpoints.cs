@@ -1,8 +1,9 @@
 ﻿using Application.Shared.Pagination;
 using Application.Shared.Requesets;
-using Application.Users.Commands.Activate;
-using Application.Users.Commands.Deactivate;
-using Application.Users.Queries.GetAll;
+using Application.UserManagement.Commands.Activate;
+using Application.UserManagement.Commands.Deactivate;
+using Application.UserManagement.Commands.Delete;
+using Application.UserManagement.Queries.GetAll;
 using Domain.Roles;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
@@ -11,6 +12,8 @@ using Microsoft.AspNetCore.Routing;
 using SharedKernal;
 using System;
 using System.Linq;
+using System.Net.Http;
+using System.Security.Claims;
 using System.Threading;
 using WebAPI.Helpers;
 
@@ -104,6 +107,40 @@ namespace WebAPI.Endpoints
                     new
                     {
                         Message = $"Users with ids, {string.Join(",", deactivatedIds)} were deactivated."
+                    });
+            });
+
+            group.MapPut("delete", async (
+                BulkIdsRequest<string> request,
+                HttpContext httpContext,
+                ISender sender,
+                CancellationToken cancellationToken) =>
+            {
+                var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Results.Unauthorized();
+                }
+
+                var command = new DeleteUsersCommand(request.Ids.ToList(), userId);
+                var result = await sender.Send(command, cancellationToken);
+                if (result.IsFailure)
+                {
+                    return HandleFailure(result);
+                }
+                var deletedIds = result.Value;
+                if (deletedIds.Count == 1)
+                {
+                    return Results.Ok(
+                    new
+                    {
+                        Message = $"User with id, {deletedIds[0]} was deleted."
+                    });
+                }
+                return Results.Ok(
+                    new
+                    {
+                        Message = $"Users with ids, {string.Join(",", deletedIds)} were deleted."
                     });
             });
         }

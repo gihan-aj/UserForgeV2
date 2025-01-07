@@ -11,8 +11,11 @@ namespace Infrastructure.Persistence.Configurations
         {
             builder.HasKey(u => u.Id);
 
-            builder.HasIndex(u => u.NormalizedUserName).IsUnique();
+            builder.HasIndex(u => u.NormalizedUserName).IsUnique().HasFilter("[IsDeleted] = 0");
             builder.HasIndex(u => u.NormalizedEmail);
+            builder.HasIndex(u => u.IsDeleted);
+
+            builder.HasQueryFilter(u => !u.IsDeleted);
 
             builder.ToTable("AspNetUsers");
 

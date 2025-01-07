@@ -1,7 +1,7 @@
 ﻿using Application.Abstractions.Messaging;
 using Application.Shared.Pagination;
 
-namespace Application.Users.Queries.GetAll
+namespace Application.UserManagement.Queries.GetAll
 {
     public record GetAllUsersQuery(
         string? SearchTerm,

@@ -29,15 +29,8 @@ namespace Infrastructure.Persistence
             var adminEmail = "admin@userforge.com";
             if (await userManager.FindByEmailAsync(adminEmail) == null)
             {
-                var adminUser = new User
-                {
-                    UserName = adminEmail,
-                    Email = adminEmail,
-                    EmailConfirmed = true,
-                    FirstName = "system",
-                    LastName = "administrator",
-                    TwoFactorEnabled = false,
-                };
+                var adminUser = User.Create("system", "administrator", adminEmail);
+                adminUser.EmailConfirmed = true;
 
                 var result = await userManager.CreateAsync(adminUser, "Admin@123");
                 if (result.Succeeded)

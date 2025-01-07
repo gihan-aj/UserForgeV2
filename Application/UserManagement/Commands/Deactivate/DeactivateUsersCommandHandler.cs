@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Application.Users.Commands.Deactivate
+namespace Application.UserManagement.Commands.Deactivate
 {
     internal sealed class DeactivateUsersCommandHandler : ICommandHandler<DeactivateUsersCommand, List<string>>
     {

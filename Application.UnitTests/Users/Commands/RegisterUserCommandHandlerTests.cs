@@ -1,4 +1,6 @@
-﻿using Application.Abstractions.Services;
+﻿using Application.Abstractions.Data;
+using Application.Abstractions.Repositories;
+using Application.Abstractions.Services;
 using Application.Users.Commands.Register;
 using Domain.Users;
 using FluentAssertions;
@@ -11,11 +13,15 @@ namespace Application.UnitTests.Users.Commands
     {
         private readonly Mock<IUserService> _userServiceMock;
         private readonly Mock<IEmailService> _mailServiceMock;
+        private readonly Mock<IUserSettingsRepository> _userSettingsRepositoryMock;
+        private readonly Mock<IUnitOfWork> _unitOfWorkMock;
 
         public RegisterUserCommandHandlerTests()
         {
             _userServiceMock = new();
             _mailServiceMock = new();
+            _userSettingsRepositoryMock = new();
+            _unitOfWorkMock = new();
         }
 
         [Fact]
@@ -37,7 +43,9 @@ namespace Application.UnitTests.Users.Commands
 
             var handler = new RegisterUserCommandHandler(
                 _userServiceMock.Object,
-                _mailServiceMock.Object);
+                _mailServiceMock.Object,
+                _userSettingsRepositoryMock.Object,
+                _unitOfWorkMock.Object);
 
             // Act
             Result<string> result = await handler.Handle(command, default);
@@ -53,10 +61,7 @@ namespace Application.UnitTests.Users.Commands
             // Arrange
             var command = new RegisterUserCommand("first", "last", "email@test.com", null, null, "Password@123");
 
-            var user = new User
-            {
-                Id = "123"
-            };
+            var user = User.Create("first", "last", "email@test.com");
 
             _userServiceMock.Setup(
                 x => x.CreateAsync(
@@ -81,7 +86,9 @@ namespace Application.UnitTests.Users.Commands
 
             var handler = new RegisterUserCommandHandler(
                 _userServiceMock.Object,
-                _mailServiceMock.Object);
+                _mailServiceMock.Object,
+                _userSettingsRepositoryMock.Object,
+                _unitOfWorkMock.Object);
 
             // Act
             Result<string> result = await handler.Handle(command, default);
@@ -97,10 +104,7 @@ namespace Application.UnitTests.Users.Commands
             // Arrange
             var command = new RegisterUserCommand("first", "last", "email@test.com", null, null, "Password@123");
 
-            var user = new User
-            {
-                Id = "123"
-            };
+            var user = User.Create("first", "last", "email@test.com");
 
             _userServiceMock.Setup(
                 x => x.CreateAsync(
@@ -125,7 +129,9 @@ namespace Application.UnitTests.Users.Commands
 
             var handler = new RegisterUserCommandHandler(
                 _userServiceMock.Object,
-                _mailServiceMock.Object);
+                _mailServiceMock.Object,
+                _userSettingsRepositoryMock.Object,
+                _unitOfWorkMock.Object);
 
             // Act
             Result<string> result = await handler.Handle(command, default);
@@ -154,7 +160,9 @@ namespace Application.UnitTests.Users.Commands
 
             var handler = new RegisterUserCommandHandler(
                 _userServiceMock.Object,
-                _mailServiceMock.Object);
+                _mailServiceMock.Object,
+                _userSettingsRepositoryMock.Object,
+                _unitOfWorkMock.Object);
 
             // Act
             await handler.Handle(command, default);

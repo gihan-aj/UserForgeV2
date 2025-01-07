@@ -38,19 +38,28 @@ namespace Infrastructure.Services
                 return Result.Failure<User>(UserErrors.Conflict.EmailAlreadyExists(email));
             }
 
-            var user = new User
-            {
-                FirstName = firstName,
-                LastName = lastName,
-                Email = email,
-                UserName = email,
-                EmailConfirmed = false,
-                TwoFactorEnabled = false,
-                PhoneNumber = string.IsNullOrWhiteSpace(phoneNumber) ? null : phoneNumber,
-                DateOfBirth = dateOfBirth.HasValue
+            var user = User.Create(firstName, lastName, email);
+            user.PhoneNumber = string.IsNullOrWhiteSpace(phoneNumber) ? null : phoneNumber;
+            user.DateOfBirth = dateOfBirth.HasValue
                 ? dateOfBirth
-                : null,
-            };
+                : null;
+
+
+            //var user2 = new User
+            //{
+            //    FirstName = firstName,
+            //    LastName = lastName,
+            //    Email = email,
+            //    UserName = email,
+            //    EmailConfirmed = false,
+            //    TwoFactorEnabled = false,
+            //    PhoneNumber = string.IsNullOrWhiteSpace(phoneNumber) ? null : phoneNumber,
+            //    DateOfBirth = dateOfBirth.HasValue
+            //    ? dateOfBirth
+            //    : null,
+            //    CreatedOn = DateTime.UtcNow,
+            //    CreatedBy = "Self"
+            //};
 
             var createUserResult = await _userManager.CreateAsync(user, password);
             if (!createUserResult.Succeeded)
@@ -223,15 +232,17 @@ namespace Infrastructure.Services
                 return UserErrors.NotFound.User(userId);
             }
 
-            user.FirstName = firstName;
-            user.LastName = lastName;
-            if (!string.IsNullOrWhiteSpace(phoneNumber))
-                user.PhoneNumber = phoneNumber;
+            user.Update(firstName, lastName, dateOfBirth, phoneNumber, userId);
 
-            if (dateOfBirth.HasValue)
-            {
-                user.DateOfBirth = dateOfBirth;
-            }
+            //user.FirstName = firstName;
+            //user.LastName = lastName;
+            //if (!string.IsNullOrWhiteSpace(phoneNumber))
+            //    user.PhoneNumber = phoneNumber;
+
+            //if (dateOfBirth.HasValue)
+            //{
+            //    user.DateOfBirth = dateOfBirth;
+            //}
 
             var updatedResult = await _userManager.UpdateAsync(user);
             if (!updatedResult.Succeeded)

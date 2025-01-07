@@ -1,6 +1,6 @@
 ﻿using Application.Abstractions.Services;
 using Application.Shared.Pagination;
-using Application.Users.Queries.GetAll;
+using Application.UserManagement.Queries.GetAll;
 using Application.Users.Queries.GetUser;
 using Domain.Users;
 using Microsoft.AspNetCore.Identity;
@@ -150,6 +150,37 @@ namespace Infrastructure.Services
                 }
 
                 return deactivatedUsers;
+            }
+        }
+
+        public async Task<Result<List<string>>> DeleteUsers(List<string> ids, string deletedBy, CancellationToken cancellationToken)
+        {
+            var users = await _userManager.Users
+                .Where(u => ids.Contains(u.Id))
+                .ToListAsync(cancellationToken);
+
+            var deletedUsers = new List<string>();
+            if (users.Count == 0)
+            {
+                if (ids.Count == 1)
+                {
+                    return Result.Failure<List<string>>(UserErrors.NotFound.User(ids[0]));
+                }
+                return Result.Failure<List<string>>(UserErrors.NotFound.Users);
+            }
+            else
+            {
+                foreach (var user in users)
+                {
+                    user.DeletedBy = deletedBy;
+                    var deleteResult = await _userManager.DeleteAsync(user);
+                    if (!deleteResult.Succeeded)
+                    {
+                        return CreateIdentityError<List<string>>(deleteResult.Errors);
+                    }
+                    deletedUsers.Add(user.Id);
+                }
+                return deletedUsers;
             }
         }
 

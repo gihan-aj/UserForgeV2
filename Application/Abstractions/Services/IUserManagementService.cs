@@ -1,9 +1,9 @@
 ﻿using Application.Shared.Pagination;
-using Application.Users.Queries.GetAll;
 using System.Threading.Tasks;
 using System.Threading;
 using SharedKernal;
 using System.Collections.Generic;
+using Application.UserManagement.Queries.GetAll;
 
 namespace Application.Abstractions.Services
 {
@@ -20,5 +20,7 @@ namespace Application.Abstractions.Services
         Task<Result<List<string>>> ActivateUsers(List<string> ids, CancellationToken cancellationToken);
 
         Task<Result<List<string>>> DeactivateUsers(List<string> ids, CancellationToken cancellationToken);
+
+        Task<Result<List<string>>> DeleteUsers(List<string> ids, string deletedBy, CancellationToken cancellationToken);
     }
 }

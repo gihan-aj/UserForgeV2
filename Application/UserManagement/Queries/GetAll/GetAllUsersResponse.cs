@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Application.Users.Queries.GetAll
+namespace Application.UserManagement.Queries.GetAll
 {
     public record GetAllUsersResponse(
         string Id,

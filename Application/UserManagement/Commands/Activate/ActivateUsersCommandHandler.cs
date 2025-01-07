@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Application.Users.Commands.Activate
+namespace Application.UserManagement.Commands.Activate
 {
     internal sealed class ActivateUsersCommandHandler : ICommandHandler<ActivateUsersCommand, List<string>>
     {
