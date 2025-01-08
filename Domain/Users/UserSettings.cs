@@ -9,6 +9,7 @@ namespace Domain.Users
             Id = Guid.NewGuid();
             UserId = userId;
             Theme = "light";
+            DefaultPageSize = 10;
             Language = "en";
             DateFormat = "MM/dd/yyyy";
             TimeFormat = "hh:mm tt";
@@ -22,6 +23,7 @@ namespace Domain.Users
         public Guid Id { get; private set; }
         public string UserId { get; private set; }
         public string Theme {  get; set; }
+        public int DefaultPageSize { get; set; }
         public string Language { get; set; }
         public string DateFormat { get; set; }
         public string TimeFormat { get; set; }

@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 using System;
 using Microsoft.Extensions.DependencyInjection;
 using Domain.Roles;
+using Application.Abstractions.Repositories;
+using Application.Abstractions.Data;
 
 namespace Infrastructure.Persistence
 {
@@ -14,6 +16,8 @@ namespace Infrastructure.Persistence
             using var scope = serviceProvider.CreateScope();
             var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<Role>>();
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+            var userSettingsRepository = scope.ServiceProvider.GetRequiredService<IUserSettingsRepository>();
+            var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
             // Seed roles
             var roles = new[] { Roles.Admin, Roles.Manager, Roles.User };
@@ -37,6 +41,9 @@ namespace Infrastructure.Persistence
                 {
                     //await userManager.AddToRoleAsync(adminUser, UserRoles.Admin);
                     await userManager.AddToRolesAsync(adminUser, [Roles.Admin, Roles.User]);
+                    var userSettings = new UserSettings(adminUser.Id);
+                    userSettingsRepository.Add(userSettings);
+                    await unitOfWork.SaveChangesAsync();
                 }
             }
         }
