@@ -2,5 +2,7 @@
 {
     public record GetAllRolesResponse(
         string Id,
-        string RoleName);
+        string Name,
+        string? Description,
+        bool IsActive);
 }

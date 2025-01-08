@@ -11,6 +11,7 @@ using System.Linq;
 using Application.Shared.Pagination;
 using System.Threading;
 using Application.Roles.Queries.GetAll;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Services
 {
@@ -42,7 +43,7 @@ namespace Infrastructure.Services
             return role.Id;
         }
 
-        public async Task<Result> UpdateAsync(string roleId, string roleName)
+        public async Task<Result> UpdateAsync(string roleId, string roleName, string description, string userId)
         {
             var role = await _roleManager.FindByIdAsync(roleId);
             if(role is null)
@@ -50,8 +51,8 @@ namespace Infrastructure.Services
                 return RoleErrors.NotFound.Role(roleId);
             }
 
-            role.Name = roleName;
-            role.NormalizedName = _roleManager.NormalizeKey(roleName);
+            var normalizedRoleName = _roleManager.NormalizeKey(roleName);
+            role.Update(roleName, normalizedRoleName, description, userId);
 
             var result = await _roleManager.UpdateAsync(role);
             if (!result.Succeeded)
@@ -70,7 +71,7 @@ namespace Infrastructure.Services
             int pageSize,
             CancellationToken cancellationToken)
         {
-            IQueryable<IdentityRole<string>> rolesQuery = _roleManager.Roles.AsQueryable();
+            IQueryable<Role> rolesQuery = _roleManager.Roles.AsQueryable();
 
             // Filtering
             if (!string.IsNullOrWhiteSpace(searchTerm))
@@ -80,7 +81,7 @@ namespace Infrastructure.Services
             }
 
             // Sorting
-            if (sortOrder?.ToLower() == "desc")
+            if (sortOrder?.Trim().ToLower() == "desc")
             {
                 rolesQuery = rolesQuery
                     .OrderByDescending(GetSortProperty(sortColumn));
@@ -95,7 +96,9 @@ namespace Infrastructure.Services
             var rolesResponsQuery = rolesQuery
                 .Select(r => new GetAllRolesResponse(
                     r.Id,
-                    r.Name!));
+                    r.Name!,
+                    r.Description,
+                    r.IsActive));
 
             var roles = await PaginatedList<GetAllRolesResponse>.CreateAsync(
                 rolesResponsQuery,
@@ -104,6 +107,78 @@ namespace Infrastructure.Services
                 cancellationToken);
 
             return roles;
+        }
+
+        public async Task<Result<List<string>>> ActivateRoles(List<string> ids, string modifiedBy, CancellationToken cancellationToken)
+        {
+            var roles = await _roleManager.Roles
+                .Where(r => ids.Contains(r.Id))
+                .ToListAsync(cancellationToken);
+
+            var activatedIds = new List<string>();
+
+            if (roles.Count == 0)
+            {
+                if (ids.Count == 1)
+                {
+                    return Result.Failure<List<string>>(RoleErrors.NotFound.Role(ids[0]));
+                }
+
+                return Result.Failure<List<string>>(RoleErrors.NotFound.Roles);
+            }
+            else
+            {
+                foreach (var role in roles)
+                {
+                    if (!role.IsActive)
+                    {
+                        role.Activate(modifiedBy);
+                        var result = await _roleManager.UpdateAsync(role);
+                        if(!result.Succeeded)
+                        {
+                            return CreateIdentityError<List<string>>(result.Errors);
+                        }
+
+                        activatedIds.Add(role.Id);
+                    }
+
+                }
+
+                return activatedIds;
+            }
+        }
+
+        public async Task<Result<List<string>>> DeactivateRoles(List<string> ids, string modifiedBy, CancellationToken cancellationToken)
+        {
+            var roles = await _roleManager.Roles
+                .Where(r => ids.Contains(r.Id))
+                .ToListAsync(cancellationToken);
+            var deactivatedIds = new List<string>();
+            if (roles.Count == 0)
+            {
+                if (ids.Count == 1)
+                {
+                    return Result.Failure<List<string>>(RoleErrors.NotFound.Role(ids[0]));
+                }
+                return Result.Failure<List<string>>(RoleErrors.NotFound.Roles);
+            }
+            else
+            {
+                foreach (var role in roles)
+                {
+                    if (role.IsActive)
+                    {
+                        role.Deactivate(modifiedBy);
+                        var result = await _roleManager.UpdateAsync(role);
+                        if (!result.Succeeded)
+                        {
+                            return CreateIdentityError<List<string>>(result.Errors);
+                        }
+                        deactivatedIds.Add(role.Id);
+                    }
+                }
+                return deactivatedIds;
+            }
         }
 
         private Result CreateIdentityError(IEnumerable<IdentityError> errors)
@@ -128,7 +203,7 @@ namespace Infrastructure.Services
             return Result.Failure<T>(error);
         }
 
-        private static Expression<Func<IdentityRole<string>, object>> GetSortProperty(string? sortColumn)
+        private static Expression<Func<Role, object>> GetSortProperty(string? sortColumn)
         {
             return sortColumn?.ToLower() switch
             {

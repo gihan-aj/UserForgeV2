@@ -1,6 +1,9 @@
-﻿using Application.Roles.Commands.Create;
+﻿using Application.Roles.Commands.Activate;
+using Application.Roles.Commands.Create;
+using Application.Roles.Commands.Deactivate;
 using Application.Roles.Commands.Update;
 using Application.Roles.Queries.GetAll;
+using Application.Shared.Requesets;
 using Domain.Roles;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
@@ -8,6 +11,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using SharedKernal;
 using System;
+using System.Linq;
 using System.Net.Http;
 using System.Security.Claims;
 using System.Threading;
@@ -17,7 +21,7 @@ namespace WebAPI.Endpoints
 {
     public static class RoleManagementEndpoints
     {
-        public static void MapRoleManagementEndpoints(this IEndpointRouteBuilder app)
+        public static async void MapRoleManagementEndpoints(this IEndpointRouteBuilder app)
         {
             var group = app
                 .MapGroup("roles")
@@ -35,7 +39,7 @@ namespace WebAPI.Endpoints
                 {
                     return Results.Unauthorized();
                 }
-                var command = new CreateRoleCommand(request.RoleName.ToLower(), request.Description, userId);
+                var command = new CreateRoleCommand(request.RoleName.Trim().ToLower(), request.Description, userId);
                 var result = await sender.Send(command, cancellationToken);
                 if (result.IsFailure)
                 {
@@ -53,10 +57,22 @@ namespace WebAPI.Endpoints
 
             group.MapPut("update", async (
                 UpdateRoleRequest request,
+                HttpContext httpContext,
                 ISender sender,
                 CancellationToken cancellationToken) =>
             {
-                var command = new UpdateRoleCommand(request.RoleId, request.RoleName.ToLower());
+                var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Results.Unauthorized();
+                }
+
+                var command = new UpdateRoleCommand(
+                    request.RoleId, 
+                    request.RoleName.Trim().ToLower(),
+                    request.Description,
+                    userId);
+
                 var result = await sender.Send(command, cancellationToken);
                 if (result.IsFailure)
                 {
@@ -87,8 +103,85 @@ namespace WebAPI.Endpoints
 
                 return Results.Ok(result.Value);
             })
-                .Produces(StatusCodes.Status204NoContent);
-;
+                .Produces(StatusCodes.Status200OK);
+
+            group.MapPut("activate", async (
+                BulkIdsRequest<string> ids,
+                HttpContext httpContext,
+                ISender sender,
+                CancellationToken cancellationToken) =>
+            {
+                var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Results.Unauthorized();
+                }
+
+                var command = new ActivateRolesCommand(ids.Ids.ToList(), userId);
+                var result = await sender.Send(command, cancellationToken);
+                if (result.IsFailure)
+                {
+                    return HandleFailure(result);
+                }
+
+                var activatedIds = result.Value;
+
+                if (activatedIds.Count == 1)
+                {
+                    return Results.Ok(
+                    new
+                    {
+                        Message = $"Role with id, {activatedIds[0]} was activated."
+                    });
+                }
+
+                return Results.Ok(
+                    new
+                    {
+                        Message = $"Roles with ids, {string.Join(",", activatedIds)} were activated."
+                    });
+            })
+                .Produces(StatusCodes.Status200OK);
+
+            group.MapPut("deactivate", async (
+                BulkIdsRequest<string> ids,
+                HttpContext httpContext,
+                ISender sender,
+                CancellationToken cancellationToken) =>
+            {
+                var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Results.Unauthorized();
+                }
+
+                var command = new DeactivateRolesCommand(ids.Ids.ToList(), userId);
+                var result = await sender.Send(command, cancellationToken);
+                if (result.IsFailure)
+                {
+                    return HandleFailure(result);
+                }
+
+                var deactivatedIds = result.Value;
+
+                if (deactivatedIds.Count == 1)
+                {
+                    return Results.Ok(
+                    new
+                    {
+                        Message = $"Role with id, {deactivatedIds[0]} was deactivated."
+                    });
+                }
+
+                return Results.Ok(
+                    new
+                    {
+                        Message = $"Roles with ids, {string.Join(",", deactivatedIds)} were deactivated."
+                    });
+            })
+                .Produces(StatusCodes.Status200OK);
+
+
         }
 
         private static IResult HandleFailure(Result result) =>
@@ -113,6 +206,12 @@ namespace WebAPI.Endpoints
                 { Error: { Code: "RoleNotFound" } } =>
                 Results.Problem(ErrorHandler.CreateProblemDetails(
                     "Role Not Found",
+                    StatusCodes.Status404NotFound,
+                    result.Error)),
+                
+                { Error: { Code: "RolesNotFound" } } =>
+                Results.Problem(ErrorHandler.CreateProblemDetails(
+                    "Roles Not Found",
                     StatusCodes.Status404NotFound,
                     result.Error)),
                 

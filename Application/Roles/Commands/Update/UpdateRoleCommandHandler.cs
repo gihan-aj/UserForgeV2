@@ -18,7 +18,11 @@ namespace Application.Roles.Commands.Update
 
         public async Task<Result> Handle(UpdateRoleCommand request, CancellationToken cancellationToken)
         {
-            var result = await _roleManagementService.UpdateAsync(request.RoleId, request.RoleName);
+            var result = await _roleManagementService.UpdateAsync(
+                request.RoleId, 
+                request.RoleName, 
+                request.Description, 
+                request.UserId);
 
             return result;
         }

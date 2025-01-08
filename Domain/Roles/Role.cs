@@ -35,10 +35,10 @@ namespace Domain.Roles
 
         public bool IsDeleted { get; set; }
 
-        public void Update(string roleName, string description, string modifiedBy)
+        public void Update(string roleName, string normalizedRoleName, string description, string modifiedBy)
         {
             Name = roleName;
-            NormalizedName = roleName.ToUpperInvariant();
+            NormalizedName = normalizedRoleName;
             Description = string.IsNullOrWhiteSpace(description)
                 ? null
                 : description;
