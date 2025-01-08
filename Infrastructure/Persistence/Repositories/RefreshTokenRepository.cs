@@ -4,6 +4,7 @@ using Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using SharedKernal;
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -82,6 +83,16 @@ namespace Infrastructure.Persistence.Repositories
             }
 
             _context.RefreshTokens.Remove(tokenData);
+            return Result.Success();
+        }
+
+        public async Task<Result> LogoutFromAllDevicesAsync(string userId, CancellationToken cancellationToken)
+        {
+            var tokens = await _context.RefreshTokens.Where(rt => rt.UserId == userId).ToListAsync(cancellationToken);
+            if (tokens.Count > 0)
+            {
+                _context.RefreshTokens.RemoveRange(tokens);
+            }
             return Result.Success();
         }
     }

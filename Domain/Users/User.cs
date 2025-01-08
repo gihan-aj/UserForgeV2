@@ -70,14 +70,18 @@ namespace Domain.Users
             LastModifiedOn = DateTime.UtcNow;
         }
 
-        public void Activate()
+        public void Activate(string modifiedBy)
         {
             IsActive = true;
+            LastModifiedBy = modifiedBy;
+            LastModifiedOn = DateTime.UtcNow;
         }
 
-        public void Deactivate()
+        public void Deactivate(string modifiedBy)
         {
             IsActive = false;
+            LastModifiedBy = modifiedBy;
+            LastModifiedOn = DateTime.UtcNow;
         }
     }
 }

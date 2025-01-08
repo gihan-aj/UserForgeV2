@@ -77,7 +77,7 @@ namespace Infrastructure.Services
             return users;
         }
 
-        public async Task<Result<List<string>>> ActivateUsers(List<string> ids, CancellationToken cancellationToken)
+        public async Task<Result<List<string>>> ActivateUsersAsync(List<string> ids, string modifiedBy, CancellationToken cancellationToken)
         {
             var users = await _userManager.Users
                 .Where(u => ids.Contains(u.Id))
@@ -100,7 +100,7 @@ namespace Infrastructure.Services
                 {
                     if (!user.IsActive)
                     {
-                        user.Activate();
+                        user.Activate(modifiedBy);
                         var updateResult = await _userManager.UpdateAsync(user);
                         if (!updateResult.Succeeded)
                         {
@@ -115,7 +115,7 @@ namespace Infrastructure.Services
             }
         }
         
-        public async Task<Result<List<string>>> DeactivateUsers(List<string> ids, CancellationToken cancellationToken)
+        public async Task<Result<List<string>>> DeactivateUsersAsync(List<string> ids, string modifiedBy, CancellationToken cancellationToken)
         {
             var users = await _userManager.Users
                 .Where(u => ids.Contains(u.Id))
@@ -138,7 +138,7 @@ namespace Infrastructure.Services
                 {
                     if (user.IsActive)
                     {
-                        user.Deactivate();
+                        user.Deactivate(modifiedBy);
                         var updateResult = await _userManager.UpdateAsync(user);
                         if (!updateResult.Succeeded)
                         {
@@ -153,7 +153,7 @@ namespace Infrastructure.Services
             }
         }
 
-        public async Task<Result<List<string>>> DeleteUsers(List<string> ids, string deletedBy, CancellationToken cancellationToken)
+        public async Task<Result<List<string>>> DeleteUsersAsync(List<string> ids, string deletedBy, CancellationToken cancellationToken)
         {
             var users = await _userManager.Users
                 .Where(u => ids.Contains(u.Id))

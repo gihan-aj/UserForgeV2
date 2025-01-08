@@ -52,10 +52,17 @@ namespace WebAPI.Endpoints
 
             group.MapPut("activate", async (
                 BulkIdsRequest<string> request,
+                HttpContext httpContext,
                 ISender sender,
                 CancellationToken cancellationToken) =>
             {
-                var command = new ActivateUsersCommand(request.Ids.ToList());
+                var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Results.Unauthorized();
+                }
+
+                var command = new ActivateUsersCommand(request.Ids.ToList(), userId);
                 var result = await sender.Send(command, cancellationToken);
                 if (result.IsFailure)
                 {
@@ -82,10 +89,17 @@ namespace WebAPI.Endpoints
             
             group.MapPut("deactivate", async (
                 BulkIdsRequest<string> request,
+                HttpContext httpContext,
                 ISender sender,
                 CancellationToken cancellationToken) =>
             {
-                var command = new DeactivateUsersCommand(request.Ids.ToList());
+                var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Results.Unauthorized();
+                }
+
+                var command = new DeactivateUsersCommand(request.Ids.ToList(), userId);
                 var result = await sender.Send(command, cancellationToken);
                 if (result.IsFailure)
                 {

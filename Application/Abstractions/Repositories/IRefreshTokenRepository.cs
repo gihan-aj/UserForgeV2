@@ -21,5 +21,7 @@ namespace Application.Abstractions.Repositories
         Task<bool> Validate(string refreshToken, string deviceInfo);
 
         Task<Result> RemoveAsync(string userId, string deviceIdentifierHash);
+
+        Task<Result> LogoutFromAllDevicesAsync(string userId, CancellationToken cancellationToken);
     }
 }

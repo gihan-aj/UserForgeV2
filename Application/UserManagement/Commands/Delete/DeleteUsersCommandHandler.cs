@@ -18,7 +18,7 @@ namespace Application.UserManagement.Commands.Delete
 
         public async Task<Result<List<string>>> Handle(DeleteUsersCommand request, CancellationToken cancellationToken)
         {
-            var result = await _userManagementService.DeleteUsers(request.UserIds, request.DeletedBy, cancellationToken);
+            var result = await _userManagementService.DeleteUsersAsync(request.UserIds, request.DeletedBy, cancellationToken);
             return result;
         }
     }

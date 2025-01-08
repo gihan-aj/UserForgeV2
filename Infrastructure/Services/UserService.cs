@@ -42,23 +42,6 @@ namespace Infrastructure.Services
                 ? dateOfBirth
                 : null;
 
-
-            //var user2 = new User
-            //{
-            //    FirstName = firstName,
-            //    LastName = lastName,
-            //    Email = email,
-            //    UserName = email,
-            //    EmailConfirmed = false,
-            //    TwoFactorEnabled = false,
-            //    PhoneNumber = string.IsNullOrWhiteSpace(phoneNumber) ? null : phoneNumber,
-            //    DateOfBirth = dateOfBirth.HasValue
-            //    ? dateOfBirth
-            //    : null,
-            //    CreatedOn = DateTime.UtcNow,
-            //    CreatedBy = "Self"
-            //};
-
             var createUserResult = await _userManager.CreateAsync(user, password);
             if (!createUserResult.Succeeded)
             {
@@ -132,6 +115,11 @@ namespace Infrastructure.Services
             if (!user.EmailConfirmed)
             {
                 return Result.Failure<User>(UserErrors.Authorization.EmailNotConfirmed(email));
+            }
+
+            if (!user.IsActive)
+            {
+                return Result.Failure<User>(UserErrors.Authorization.AccountDeactivated);
             }
 
             if (!await _userManager.CheckPasswordAsync(user, password))

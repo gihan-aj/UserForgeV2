@@ -18,7 +18,7 @@ namespace Application.UserManagement.Commands.Activate
 
         public Task<Result<List<string>>> Handle(ActivateUsersCommand request, CancellationToken cancellationToken)
         {
-            var result = _userManagementService.ActivateUsers(request.Ids, cancellationToken);
+            var result = _userManagementService.ActivateUsersAsync(request.Ids, request.UserId, cancellationToken);
             return result;
         }
     }
