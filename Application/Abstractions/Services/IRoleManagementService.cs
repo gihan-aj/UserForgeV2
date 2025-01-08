@@ -1,5 +1,4 @@
-﻿
-using Application.Roles.Queries.GetAll;
+﻿using Application.Roles.Queries.GetAll;
 using Application.Shared.Pagination;
 using SharedKernal;
 using System.Collections.Generic;
@@ -22,8 +21,10 @@ namespace Application.Abstractions.Services
             int pageSize,
             CancellationToken cancellationToken);
 
-        Task<Result<List<string>>> ActivateRoles(List<string> ids, string modifiedBy, CancellationToken cancellationToken);
+        Task<Result<List<string>>> ActivateRolesAsync(List<string> ids, string modifiedBy, CancellationToken cancellationToken);
 
-        Task<Result<List<string>>> DeactivateRoles(List<string> ids, string modifiedBy, CancellationToken cancellationToken);
+        Task<Result<List<string>>> DeactivateRolesAsync(List<string> ids, string modifiedBy, CancellationToken cancellationToken);
+
+        Task<Result<List<string>>> DeleteRolesAsync(List<string> ids, string deletedBy, CancellationToken cancellationToken);
     }
 }

@@ -17,9 +17,9 @@ namespace Application.Roles.Commands.Deactivate
             _roleManagementService = roleManagementService;
         }
 
-        public Task<Result<List<string>>> Handle(DeactivateRolesCommand request, CancellationToken cancellationToken)
+        public async Task<Result<List<string>>> Handle(DeactivateRolesCommand request, CancellationToken cancellationToken)
         {
-            var result = _roleManagementService.DeactivateRoles(request.Ids, request.UserId, cancellationToken);
+            var result = await _roleManagementService.DeactivateRolesAsync(request.Ids, request.UserId, cancellationToken);
             return result;
         }
     }

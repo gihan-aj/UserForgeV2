@@ -109,7 +109,7 @@ namespace Infrastructure.Services
             return roles;
         }
 
-        public async Task<Result<List<string>>> ActivateRoles(List<string> ids, string modifiedBy, CancellationToken cancellationToken)
+        public async Task<Result<List<string>>> ActivateRolesAsync(List<string> ids, string modifiedBy, CancellationToken cancellationToken)
         {
             var roles = await _roleManager.Roles
                 .Where(r => ids.Contains(r.Id))
@@ -148,7 +148,7 @@ namespace Infrastructure.Services
             }
         }
 
-        public async Task<Result<List<string>>> DeactivateRoles(List<string> ids, string modifiedBy, CancellationToken cancellationToken)
+        public async Task<Result<List<string>>> DeactivateRolesAsync(List<string> ids, string modifiedBy, CancellationToken cancellationToken)
         {
             var roles = await _roleManager.Roles
                 .Where(r => ids.Contains(r.Id))
@@ -178,6 +178,43 @@ namespace Infrastructure.Services
                     }
                 }
                 return deactivatedIds;
+            }
+        }
+        
+        public async Task<Result<List<string>>> DeleteRolesAsync(List<string> ids, string deletedBy, CancellationToken cancellationToken)
+        {
+            var roles = await _roleManager.Roles
+                .Where(r => ids.Contains(r.Id))
+                .ToListAsync(cancellationToken);
+
+            var deletedIds = new List<string>();
+
+            if (roles.Count == 0)
+            {
+                if (ids.Count == 1)
+                {
+                    return Result.Failure<List<string>>(RoleErrors.NotFound.Role(ids[0]));
+                }
+                return Result.Failure<List<string>>(RoleErrors.NotFound.Roles);
+            }
+            else
+            {
+                foreach (var role in roles)
+                {
+                    if(!role.IsDeleted)
+                    {
+                        role.DeletedBy = deletedBy;
+
+                        var result = await _roleManager.DeleteAsync(role);
+                        if (!result.Succeeded)
+                        {
+                            return CreateIdentityError<List<string>>(result.Errors);
+                        }
+                        deletedIds.Add(role.Id);
+                    }
+                }
+
+                return deletedIds;
             }
         }
 

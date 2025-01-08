@@ -1,6 +1,7 @@
 ﻿using Application.Roles.Commands.Activate;
 using Application.Roles.Commands.Create;
 using Application.Roles.Commands.Deactivate;
+using Application.Roles.Commands.Delete;
 using Application.Roles.Commands.Update;
 using Application.Roles.Queries.GetAll;
 using Application.Shared.Requesets;
@@ -21,7 +22,7 @@ namespace WebAPI.Endpoints
 {
     public static class RoleManagementEndpoints
     {
-        public static async void MapRoleManagementEndpoints(this IEndpointRouteBuilder app)
+        public static void MapRoleManagementEndpoints(this IEndpointRouteBuilder app)
         {
             var group = app
                 .MapGroup("roles")
@@ -68,7 +69,7 @@ namespace WebAPI.Endpoints
                 }
 
                 var command = new UpdateRoleCommand(
-                    request.RoleId, 
+                    request.RoleId,
                     request.RoleName.Trim().ToLower(),
                     request.Description,
                     userId);
@@ -177,6 +178,44 @@ namespace WebAPI.Endpoints
                     new
                     {
                         Message = $"Roles with ids, {string.Join(",", deactivatedIds)} were deactivated."
+                    });
+            })
+                .Produces(StatusCodes.Status200OK);
+            
+            group.MapPut("delete", async (
+                BulkIdsRequest<string> ids,
+                HttpContext httpContext,
+                ISender sender,
+                CancellationToken cancellationToken) =>
+            {
+                var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Results.Unauthorized();
+                }
+
+                var command = new DeleteRolesCommand(ids.Ids.ToList(), userId);
+                var result = await sender.Send(command, cancellationToken);
+                if (result.IsFailure)
+                {
+                    return HandleFailure(result);
+                }
+
+                var deletedIds = result.Value;
+
+                if (deletedIds.Count == 1)
+                {
+                    return Results.Ok(
+                    new
+                    {
+                        Message = $"Role with id, {deletedIds[0]} was deleted."
+                    });
+                }
+
+                return Results.Ok(
+                    new
+                    {
+                        Message = $"Roles with ids, {string.Join(",", deletedIds)} were deleted."
                     });
             })
                 .Produces(StatusCodes.Status200OK);

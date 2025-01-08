@@ -18,7 +18,7 @@ namespace Application.Roles.Commands.Activate
 
         public async Task<Result<List<string>>> Handle(ActivateRolesCommand request, CancellationToken cancellationToken)
         {
-            var result =  await _roleManagementService.ActivateRoles(request.Ids, request.UserId, cancellationToken);
+            var result =  await _roleManagementService.ActivateRolesAsync(request.Ids, request.UserId, cancellationToken);
             return result;
         }
     }
