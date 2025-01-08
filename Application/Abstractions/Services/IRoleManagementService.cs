@@ -9,7 +9,7 @@ namespace Application.Abstractions.Services
 {
     public interface IRoleManagementService
     {
-        Task<Result<string>> CreateAsync(string roleName);
+        Task<Result<string>> CreateAsync(string roleName, string description, string userId);
 
         Task<Result> UpdateAsync(string roleId, string roleName);
 

@@ -12,7 +12,7 @@ namespace Infrastructure.Persistence
         public static async Task SeedRolesAndUserAsync(IServiceProvider serviceProvider)
         {
             using var scope = serviceProvider.CreateScope();
-            var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<string>>>();
+            var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<Role>>();
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
 
             // Seed roles
@@ -21,7 +21,7 @@ namespace Infrastructure.Persistence
             {
                 if (!await roleManager.RoleExistsAsync(role))
                 {
-                    await roleManager.CreateAsync(new IdentityRole(role));
+                    await roleManager.CreateAsync(new Role(role, null, "default"));
                 }
             }
 
@@ -29,7 +29,7 @@ namespace Infrastructure.Persistence
             var adminEmail = "admin@userforge.com";
             if (await userManager.FindByEmailAsync(adminEmail) == null)
             {
-                var adminUser = User.Create("system", "administrator", adminEmail);
+                var adminUser = User.Create("system", "administrator", adminEmail, "default");
                 adminUser.EmailConfirmed = true;
 
                 var result = await userManager.CreateAsync(adminUser, "Admin@123");

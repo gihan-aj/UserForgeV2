@@ -17,11 +17,9 @@ namespace Infrastructure.Services
     public class UserService : IUserService
     {
         private readonly UserManager<User> _userManager;
-        private readonly RoleManager<IdentityRole<string>> _roleManager;
 
-        public UserService(RoleManager<IdentityRole<string>> roleManager, UserManager<User> userManager)
+        public UserService(UserManager<User> userManager)
         {
-            _roleManager = roleManager;
             _userManager = userManager;
         }
 

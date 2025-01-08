@@ -2,5 +2,5 @@
 
 namespace Application.Roles.Commands.Create
 {
-    public record CreateRoleCommand(string RoleName): ICommand<string>;
+    public record CreateRoleCommand(string RoleName, string Description, string UserId) : ICommand<string>;
 }

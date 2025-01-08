@@ -4,10 +4,11 @@ using System;
 
 namespace Domain.Users
 {
-    public class User : IdentityUser, IAuditable, ISoftDeletable
+    public class User : IdentityUser<string>, IAuditable, ISoftDeletable
     {
         private User(string firstName, string lastName, string email) : base() 
         {
+            Id = Guid.NewGuid().ToString(); // Explicitly initialize the Id
             FirstName = firstName;
             LastName = lastName;
             Email = email;

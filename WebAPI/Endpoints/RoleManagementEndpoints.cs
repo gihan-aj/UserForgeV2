@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using SharedKernal;
 using System;
+using System.Net.Http;
+using System.Security.Claims;
 using System.Threading;
 using WebAPI.Helpers;
 
@@ -24,10 +26,17 @@ namespace WebAPI.Endpoints
 
             group.MapPost("create", async (
                 CreateRoleRequest request,
+                HttpContext httpContext,
                 ISender sender,
                 CancellationToken cancellationToken) =>
             {
-                var result = await sender.Send(new CreateRoleCommand(request.RoleName.ToLower()), cancellationToken);
+                var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Results.Unauthorized();
+                }
+                var command = new CreateRoleCommand(request.RoleName.ToLower(), request.Description, userId);
+                var result = await sender.Send(command, cancellationToken);
                 if (result.IsFailure)
                 {
                     return HandleFailure(result);

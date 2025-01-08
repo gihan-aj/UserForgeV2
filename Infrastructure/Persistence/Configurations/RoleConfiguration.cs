@@ -1,18 +1,25 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Domain.Roles;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configurations
 {
-    internal class RoleConfiguration : IEntityTypeConfiguration<IdentityRole<string>>
+    internal class RoleConfiguration : IEntityTypeConfiguration<Role>
     {
-        public void Configure(EntityTypeBuilder<IdentityRole<string>> builder)
+        public void Configure(EntityTypeBuilder<Role> builder)
         {
             // Primary key
             builder.HasKey(r => r.Id);
 
+            builder.Property(u => u.Description).HasMaxLength(450);
+
             // Index for "normalized" role name to allow efficient lookups
-            builder.HasIndex(r => r.NormalizedName).IsUnique();
+            builder.HasIndex(r => r.NormalizedName).IsUnique().HasFilter("[IsDeleted] = 0");
+
+            builder.HasIndex(u => u.IsDeleted);
+
+            builder.HasQueryFilter(u => !u.IsDeleted);
 
             // Maps to the AspNetRoles table
             builder.ToTable("AspNetRoles");

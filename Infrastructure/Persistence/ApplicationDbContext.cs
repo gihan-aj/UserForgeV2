@@ -7,10 +7,11 @@ using System.Threading.Tasks;
 using System.Threading;
 using System;
 using Application.Abstractions.Data;
+using Domain.Roles;
 
 namespace Infrastructure.Persistence
 {
-    public class ApplicationDbContext : IdentityDbContext<User>, IApplicationDbContext, IUnitOfWork
+    public class ApplicationDbContext : IdentityDbContext<User, Role, string>, IApplicationDbContext, IUnitOfWork
     {
         public DbSet<RefreshToken> RefreshTokens { get; set; }
 

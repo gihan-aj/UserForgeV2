@@ -1,4 +1,5 @@
 ﻿using Application.Abstractions.Data;
+using Domain.Roles;
 using Domain.Users;
 using Infrastructure.Identity;
 using Infrastructure.Persistence;
@@ -32,8 +33,8 @@ namespace Infrastructure
                 options.Tokens.ChangeEmailTokenProvider = TokenOptions.DefaultEmailProvider;
                 options.Tokens.PasswordResetTokenProvider = TokenOptions.DefaultProvider;
             })
-                .AddRoles<IdentityRole<string>>()
-                .AddRoleManager<RoleManager<IdentityRole<string>>>()
+                .AddRoles<Role>()
+                .AddRoleManager<RoleManager<Role>>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddPasswordValidator<PasswordValidator<User>>()
                 .AddTokenProvider<EmailTokenProvider<User>>(TokenOptions.DefaultEmailProvider)

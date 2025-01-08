@@ -16,13 +16,13 @@ namespace Infrastructure.Services
 {
     public class RoleManagementService : IRoleManagementService
     {
-        private readonly RoleManager<IdentityRole<string>> _roleManager;
-        public RoleManagementService(RoleManager<IdentityRole<string>> roleManager)
+        private readonly RoleManager<Role> _roleManager;
+        public RoleManagementService(RoleManager<Role> roleManager)
         {
             _roleManager = roleManager;
         }
 
-        public async Task<Result<string>> CreateAsync(string roleName)
+        public async Task<Result<string>> CreateAsync(string roleName, string description, string userId)
         {
             var roleExists = await _roleManager.RoleExistsAsync(roleName);
             if(roleExists)
@@ -30,7 +30,8 @@ namespace Infrastructure.Services
                 return Result.Failure<string>(RoleErrors.Conflict.RoleNameAlreadyExists(roleName));
             }
 
-            var role = new IdentityRole(roleName);
+            //var role = new IdentityRole(roleName);
+            var role = new Role(roleName, description, userId);
 
             var result = await _roleManager.CreateAsync(role);
             if (!result.Succeeded)
