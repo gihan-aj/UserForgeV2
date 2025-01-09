@@ -1,6 +1,7 @@
 ﻿using Application.Shared.Pagination;
 using Application.Shared.Requesets;
 using Application.UserManagement.Commands.Activate;
+using Application.UserManagement.Commands.AssignRoles;
 using Application.UserManagement.Commands.Deactivate;
 using Application.UserManagement.Commands.Delete;
 using Application.UserManagement.Queries.GetAll;
@@ -121,6 +122,47 @@ namespace WebAPI.Endpoints
                     new
                     {
                         Message = $"Users with ids, {string.Join(",", deactivatedIds)} were deactivated."
+                    });
+            });
+
+            group.MapPut("assign-roles", async (
+                AssignUserRolesRequest request,
+                HttpContext httpContext,
+                ISender sender,
+                CancellationToken cancellationToken) =>
+            {
+                var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Results.Unauthorized();
+                }
+                var command = new AssignUserRolesCommand(request.UserId, request.RoleNames, userId);
+                var result = await sender.Send(command, cancellationToken);
+                if (result.IsFailure)
+                {
+                    return HandleFailure(result);
+                }
+                var assignedRoleIds = result.Value;
+                if(assignedRoleIds.Count == 0)
+                {
+                    return Results.Ok(
+                    new
+                    {
+                        Message = $"No roles were assigned to user."
+                    });
+                }
+                if (assignedRoleIds.Count == 1)
+                {
+                    return Results.Ok(
+                    new
+                    {
+                        Message = $"Role, {assignedRoleIds[0]} was assigned to user."
+                    });
+                }
+                return Results.Ok(
+                    new
+                    {
+                        Message = $"Roles, {string.Join(",", assignedRoleIds)} were assigned to user."
                     });
             });
 

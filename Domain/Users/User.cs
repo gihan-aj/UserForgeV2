@@ -83,5 +83,11 @@ namespace Domain.Users
             LastModifiedBy = modifiedBy;
             LastModifiedOn = DateTime.UtcNow;
         }
+
+        public void UserRolesModified(string modifiedBy)
+        {
+            LastModifiedBy = modifiedBy;
+            LastModifiedOn = DateTime.UtcNow;
+        }
     }
 }

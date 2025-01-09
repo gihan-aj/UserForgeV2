@@ -153,6 +153,37 @@ namespace Infrastructure.Services
             }
         }
 
+        public async Task<Result<List<string>>> AssignUserRolesAsync(string userId, List<string> roleNames, string modifiedBy, CancellationToken cancellationToken)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user is null)
+            {
+                return Result.Failure<List<string>>(UserErrors.NotFound.User(userId));
+            }
+            var roles = await _userManager.GetRolesAsync(user);
+            var rolesToAdd = roleNames.Except(roles).ToList();
+            var rolesToRemove = roles.Except(roleNames).ToList();
+            var addResult = await _userManager.AddToRolesAsync(user, rolesToAdd);
+            if (!addResult.Succeeded)
+            {
+                return CreateIdentityError<List<string>>(addResult.Errors);
+            }
+            var removeResult = await _userManager.RemoveFromRolesAsync(user, rolesToRemove);
+            if (!removeResult.Succeeded)
+            {
+                return CreateIdentityError<List<string>>(removeResult.Errors);
+            }
+
+            user.UserRolesModified(modifiedBy);
+            var updateResult = await _userManager.UpdateAsync(user);
+            if (!updateResult.Succeeded)
+            {
+                return CreateIdentityError<List<string>>(updateResult.Errors);
+            }
+
+            return roles.Except(rolesToRemove).Concat(rolesToAdd).ToList();
+        }
+
         public async Task<Result<List<string>>> DeleteUsersAsync(List<string> ids, string deletedBy, CancellationToken cancellationToken)
         {
             var users = await _userManager.Users
