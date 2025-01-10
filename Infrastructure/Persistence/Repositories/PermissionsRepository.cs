@@ -30,9 +30,14 @@ namespace Infrastructure.Persistence.Repositories
             _context.Permissions.Update(permission);
         }
 
-        public async Task<bool> ExistsAsync(string permissionName)
+        public async Task<bool> NameExistsAsync(string permissionName)
         {
             return await _context.Permissions.AnyAsync(p => p.Name == permissionName);
+        }
+
+        public async Task<Permission?> GetByIdAsync(string id)
+        {
+            return await _context.Permissions.FindAsync(id);
         }
     }
 }

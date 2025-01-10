@@ -8,6 +8,7 @@ namespace Application.Abstractions.Repositories
         void Add(Permission permission);
         void Remove(Permission permission);
         void Update(Permission permission);
-        Task<bool> ExistsAsync(string permissionName);
+        Task<bool> NameExistsAsync(string permissionName);
+        Task<Permission?> GetByIdAsync(string id);
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Application.Permissions.Commands.Create;
+using Application.Permissions.Commands.Update;
 using Domain.Roles;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
@@ -50,6 +51,37 @@ namespace WebAPI.Endpoints
                     : HandleFailure(result);
             })
                 .Produces(StatusCodes.Status201Created);
+
+            group.MapPut("update", async (
+                UpdatePermissionRequest request, 
+                HttpContext httpContext, 
+                ISender sender, 
+                CancellationToken cancellationToken) =>
+            {
+                var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Results.Unauthorized();
+                }
+
+                var command = new UpdatePermissionCommand(
+                    request.Id,
+                    request.Name.Trim().ToLower(),
+                    string.IsNullOrWhiteSpace(request.Description)
+                        ? null
+                        : request.Description,
+                    userId);
+
+                var result = await sender.Send(command, cancellationToken);
+
+                return result.IsSuccess
+                    ? Results.Ok(value: new
+                    {
+                        Message = "Permission updated successfully."
+                    })
+                    : HandleFailure(result);
+            })
+                .Produces(StatusCodes.Status200OK);
         }
 
         private static IResult HandleFailure(Result result) =>

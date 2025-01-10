@@ -21,7 +21,7 @@ namespace Application.Permissions.Commands.Create
 
         public async Task<Result<string>> Handle(CreatePermissionCommand request, CancellationToken cancellationToken)
         {
-            if(await _permissionsRepository.ExistsAsync(request.Name))
+            if(await _permissionsRepository.NameExistsAsync(request.Name))
             {
                 return Result.Failure<string>(PermissionErrors.Confilct.PermissionNameAlreadyExists(request.Name));
             }
