@@ -8,6 +8,8 @@ using System.Threading;
 using System;
 using Application.Abstractions.Data;
 using Domain.Roles;
+using Domain.Permissions;
+using Domain.RolePermissions;
 
 namespace Infrastructure.Persistence
 {
@@ -16,6 +18,10 @@ namespace Infrastructure.Persistence
         public DbSet<RefreshToken> RefreshTokens { get; set; }
 
         public DbSet<UserSettings> UserSettings { get; set; }
+
+        public DbSet<Permission> Permissions { get; set; }
+
+        public DbSet<RolePermission> RolePermissions { get; set; }
 
         public ApplicationDbContext(DbContextOptions options) : base(options) { }
 

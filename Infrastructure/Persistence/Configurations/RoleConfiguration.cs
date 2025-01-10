@@ -39,6 +39,12 @@ namespace Infrastructure.Persistence.Configurations
 
             // Each Role can have many associated RoleClaims
             builder.HasMany<IdentityRoleClaim<string>>().WithOne().HasForeignKey(rc => rc.RoleId).IsRequired();
+
+            // Each Role can have many associated RolePermissions
+            builder.HasMany(r => r.RolePermissions)
+                .WithOne(rp => rp.Role)
+                .HasForeignKey(rp => rp.RoleId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

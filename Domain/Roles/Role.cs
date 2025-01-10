@@ -1,6 +1,9 @@
 ﻿using Domain.Primitives;
+using Domain.RolePermissions;
 using Microsoft.AspNetCore.Identity;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace Domain.Roles
 {
@@ -18,6 +21,8 @@ namespace Domain.Roles
         }
 
         public string? Description { get; private set; }
+
+        public ICollection<RolePermission> RolePermissions { get; set; } = new List<RolePermission>();
 
         public bool IsActive { get; private set; }
 
