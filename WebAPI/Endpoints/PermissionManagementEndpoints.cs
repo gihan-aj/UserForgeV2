@@ -1,5 +1,7 @@
 ﻿using Application.Permissions.Commands.Create;
 using Application.Permissions.Commands.Update;
+using Application.Permissions.Queries.GetAll;
+using Application.Shared.Pagination;
 using Domain.Roles;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
@@ -82,6 +84,28 @@ namespace WebAPI.Endpoints
                     : HandleFailure(result);
             })
                 .Produces(StatusCodes.Status200OK);
+
+            group.MapGet("", async (
+                string? searchTerm,
+                string? sortColumn,
+                string? sortOrder,
+                int page,
+                int pageSize,
+                ISender sender,
+                CancellationToken cancellationToken) =>
+            {
+                var query = new GetAllPermissionsQuery(
+                    searchTerm,
+                    sortColumn,
+                    sortOrder,
+                    page,
+                    pageSize);
+
+                var result = await sender.Send(query, cancellationToken);
+
+                return Results.Ok(result.Value);
+            })
+                .Produces(StatusCodes.Status200OK, typeof(PaginatedList<GetAllPermissionsResponse>));
         }
 
         private static IResult HandleFailure(Result result) =>
