@@ -281,7 +281,7 @@ namespace Infrastructure.Services
                 .Select(identityError => new Error(identityError.Code, identityError.Description))
                 .ToList();
 
-            var error = new Error("IdentityError", "One or more validation errors occured.", subErrors);
+            var error = new Error("IdentityError", "A problem occured during operation.", subErrors);
 
             return Result.Failure<T>(error);
         }
@@ -292,7 +292,7 @@ namespace Infrastructure.Services
                 .Select(identityError => new Error(identityError.Code, identityError.Description))
                 .ToList();
 
-            var error = new Error("IdentityError", "One or more validation errors occured.", subErrors);
+            var error = new Error("IdentityError", "A problem occured during operation.", subErrors);
 
             return Result.Failure(error);
         }

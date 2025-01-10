@@ -1,5 +1,6 @@
 ﻿using Application.Roles.Queries.GetAll;
 using Application.Shared.Pagination;
+using Domain.Roles;
 using SharedKernal;
 using System.Collections.Generic;
 using System.Threading;
@@ -20,6 +21,8 @@ namespace Application.Abstractions.Services
             int page,
             int pageSize,
             CancellationToken cancellationToken);
+
+        Task<Role?> GetRoleById(string id);
 
         Task<Result<List<string>>> ActivateRolesAsync(List<string> ids, string modifiedBy, CancellationToken cancellationToken);
 

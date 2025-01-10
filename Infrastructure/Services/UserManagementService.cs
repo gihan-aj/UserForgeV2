@@ -209,10 +209,34 @@ namespace Infrastructure.Services
                     {
                         return CreateIdentityError<List<string>>(deleteResult.Errors);
                     }
+                    var deletedUserRoles = await _userManager.GetRolesAsync(user);
+                    if (deletedUserRoles.Count > 0)
+                    {
+                        var removeRolesResult = await _userManager.RemoveFromRolesAsync(user, deletedUserRoles);
+                        if (!removeRolesResult.Succeeded)
+                        {
+                            return CreateIdentityError<List<string>>(removeRolesResult.Errors);
+                        }
+                    }
+
                     deletedUsers.Add(user.Id);
                 }
                 return deletedUsers;
             }
+        }
+
+        public async Task<Result> DeleteUserRolesByRoleNameAsync(string roleName, CancellationToken cancellationToken)
+        {
+            var users = await _userManager.GetUsersInRoleAsync(roleName);
+            foreach (var user in users)
+            {
+                var removeRolesResult = await _userManager.RemoveFromRolesAsync(user, new List<string> { roleName });
+                if (!removeRolesResult.Succeeded)
+                {
+                    return CreateIdentityError(removeRolesResult.Errors);
+                }
+            }
+            return Result.Success();
         }
 
         private Result<T> CreateIdentityError<T>(IEnumerable<IdentityError> errors)
@@ -221,7 +245,7 @@ namespace Infrastructure.Services
                 .Select(identityError => new Error(identityError.Code, identityError.Description))
                 .ToList();
 
-            var error = new Error("IdentityError", "One or more validation errors occured.", subErrors);
+            var error = new Error("IdentityError", "A problem occured during operation.", subErrors);
 
             return Result.Failure<T>(error);
         }
@@ -232,7 +256,7 @@ namespace Infrastructure.Services
                 .Select(identityError => new Error(identityError.Code, identityError.Description))
                 .ToList();
 
-            var error = new Error("IdentityError", "One or more validation errors occured.", subErrors);
+            var error = new Error("IdentityError", "A problem occured during operation.", subErrors);
 
             return Result.Failure(error);
         }

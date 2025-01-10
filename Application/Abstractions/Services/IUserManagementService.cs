@@ -28,5 +28,7 @@ namespace Application.Abstractions.Services
             CancellationToken cancellationToken);
 
         Task<Result<List<string>>> DeleteUsersAsync(List<string> ids, string deletedBy, CancellationToken cancellationToken);
+
+        Task<Result> DeleteUserRolesByRoleNameAsync(string roleName, CancellationToken cancellationToken);
     }
 }

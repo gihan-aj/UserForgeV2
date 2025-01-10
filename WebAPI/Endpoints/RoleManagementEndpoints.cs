@@ -6,9 +6,11 @@ using Application.Roles.Commands.Update;
 using Application.Roles.Queries.GetAll;
 using Application.Shared.Requesets;
 using Domain.Roles;
+using Domain.Users;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
 using SharedKernal;
 using System;
@@ -220,7 +222,6 @@ namespace WebAPI.Endpoints
             })
                 .Produces(StatusCodes.Status200OK);
 
-
         }
 
         private static IResult HandleFailure(Result result) =>
@@ -237,7 +238,7 @@ namespace WebAPI.Endpoints
 
                 { Error: { Code: "IdentityError" } } =>
                 Results.Problem(ErrorHandler.CreateProblemDetails(
-                    "Validation Errors",
+                    "Operation Failed",
                     StatusCodes.Status400BadRequest,
                     result.Error,
                     result.Error.Details.ToArray())),

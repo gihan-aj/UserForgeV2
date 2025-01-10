@@ -14,4 +14,8 @@
     <ProjectReference Include="..\SharedKernal\SharedKernal.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="NewFolder\" />
+  </ItemGroup>
+
 </Project>

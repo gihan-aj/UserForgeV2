@@ -215,7 +215,7 @@ namespace WebAPI.Endpoints
 
                 { Error: { Code: "IdentityError" } } =>
                 Results.BadRequest(ErrorHandler.CreateProblemDetails(
-                    "Validation Errors",
+                    "Operation Failed",
                     StatusCodes.Status400BadRequest,
                     result.Error,
                     result.Error.Details.ToArray())),

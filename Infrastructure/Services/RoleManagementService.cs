@@ -1,6 +1,5 @@
 ﻿using Application.Abstractions.Services;
 using Domain.Roles;
-using Domain.Users;
 using Microsoft.AspNetCore.Identity;
 using SharedKernal;
 using System.Collections.Generic;
@@ -109,13 +108,18 @@ namespace Infrastructure.Services
             return roles;
         }
 
+        public async Task<Role?> GetRoleById(string id)
+        {
+            return await _roleManager.FindByIdAsync(id);
+        }
+
         public async Task<Result<List<string>>> ActivateRolesAsync(List<string> ids, string modifiedBy, CancellationToken cancellationToken)
         {
             var roles = await _roleManager.Roles
                 .Where(r => ids.Contains(r.Id))
                 .ToListAsync(cancellationToken);
 
-            var activatedIds = new List<string>();
+            var activatedRoles = new List<string>();
 
             if (roles.Count == 0)
             {
@@ -139,12 +143,12 @@ namespace Infrastructure.Services
                             return CreateIdentityError<List<string>>(result.Errors);
                         }
 
-                        activatedIds.Add(role.Id);
+                        activatedRoles.Add(role.Name!);
                     }
 
                 }
 
-                return activatedIds;
+                return activatedRoles;
             }
         }
 
@@ -153,7 +157,9 @@ namespace Infrastructure.Services
             var roles = await _roleManager.Roles
                 .Where(r => ids.Contains(r.Id))
                 .ToListAsync(cancellationToken);
-            var deactivatedIds = new List<string>();
+
+            var deactivatedRoles = new List<string>();
+
             if (roles.Count == 0)
             {
                 if (ids.Count == 1)
@@ -174,10 +180,10 @@ namespace Infrastructure.Services
                         {
                             return CreateIdentityError<List<string>>(result.Errors);
                         }
-                        deactivatedIds.Add(role.Id);
+                        deactivatedRoles.Add(role.Name!);
                     }
                 }
-                return deactivatedIds;
+                return deactivatedRoles;
             }
         }
         
@@ -187,7 +193,7 @@ namespace Infrastructure.Services
                 .Where(r => ids.Contains(r.Id))
                 .ToListAsync(cancellationToken);
 
-            var deletedIds = new List<string>();
+            var deletedNames = new List<string>();
 
             if (roles.Count == 0)
             {
@@ -210,11 +216,12 @@ namespace Infrastructure.Services
                         {
                             return CreateIdentityError<List<string>>(result.Errors);
                         }
-                        deletedIds.Add(role.Id);
+                       
+                        deletedNames.Add(role.Name!);
                     }
                 }
 
-                return deletedIds;
+                return deletedNames;
             }
         }
 
@@ -224,7 +231,7 @@ namespace Infrastructure.Services
                 .Select(identityError => new Error(identityError.Code, identityError.Description))
                 .ToList();
 
-            var error = new Error("IdentityError", "One or more validation errors occured.", subErrors);
+            var error = new Error("IdentityError", "A problem occured during operation.", subErrors);
 
             return Result.Failure(error);
         }
@@ -235,7 +242,7 @@ namespace Infrastructure.Services
                 .Select(identityError => new Error(identityError.Code, identityError.Description))
                 .ToList();
 
-            var error = new Error("IdentityError", "One or more validation errors occured.", subErrors);
+            var error = new Error("IdentityError", "A problem occured during operation.", subErrors);
 
             return Result.Failure<T>(error);
         }
