@@ -1,7 +1,9 @@
-﻿using Application.Permissions.Commands.Create;
+﻿using Application.Permissions.Commands.Activate;
+using Application.Permissions.Commands.Create;
 using Application.Permissions.Commands.Update;
 using Application.Permissions.Queries.GetAll;
 using Application.Shared.Pagination;
+using Application.Shared.Requesets;
 using Domain.Roles;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
@@ -9,6 +11,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using SharedKernal;
 using System;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading;
 using WebAPI.Helpers;
@@ -106,6 +109,45 @@ namespace WebAPI.Endpoints
                 return Results.Ok(result.Value);
             })
                 .Produces(StatusCodes.Status200OK, typeof(PaginatedList<GetAllPermissionsResponse>));
+
+            group.MapPut("activate", async (
+                BulkIdsRequest<string> request,
+                HttpContext httpContext,
+                ISender sender,
+                CancellationToken cancellationToken) =>
+            {
+                var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Results.Unauthorized();
+                }
+
+                var command = new ActivatePermissionsCommand(request.Ids.ToList(), userId);
+                var result = await sender.Send(command, cancellationToken);
+
+                if (result.IsFailure)
+                {
+                    return HandleFailure(result);
+                }
+
+                var activatedIds = result.Value;
+
+                if (activatedIds.Count == 1)
+                {
+                    return Results.Ok(
+                    new
+                    {
+                        Message = $"Permission with id, {activatedIds[0]} was activated."
+                    });
+                }
+
+                return Results.Ok(
+                    new
+                    {
+                        Message = $"Permissions with ids, {string.Join(", ", activatedIds)} were activated."
+                    });
+            })
+                .Produces(StatusCodes.Status200OK);
         }
 
         private static IResult HandleFailure(Result result) =>
@@ -137,6 +179,18 @@ namespace WebAPI.Endpoints
                 Results.Problem(ErrorHandler.CreateProblemDetails(
                     "Permission Name Already Exists",
                     StatusCodes.Status409Conflict,
+                    result.Error)),
+                
+                { Error: { Code: "PermissionsNotFound" } } =>
+                Results.Problem(ErrorHandler.CreateProblemDetails(
+                    "Permissions Not Found",
+                    StatusCodes.Status404NotFound,
+                    result.Error)),
+                
+                { Error: { Code: "OperationFailed" } } =>
+                Results.Problem(ErrorHandler.CreateProblemDetails(
+                    "Permission Name Already Exists",
+                    StatusCodes.Status400BadRequest,
                     result.Error)),
 
                 _ => Results.Problem(ErrorHandler.CreateProblemDetails(

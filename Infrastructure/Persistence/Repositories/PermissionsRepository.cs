@@ -10,6 +10,7 @@ using Application.Shared.Pagination;
 using Application.Permissions.Queries.GetAll;
 using System.Threading;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace Infrastructure.Persistence.Repositories
 {
@@ -89,6 +90,7 @@ namespace Infrastructure.Persistence.Repositories
 
             return permissions;
         }
+
 
         private static Expression<Func<Permission, object>> GetSortProperty(string? sortColumn)
         {

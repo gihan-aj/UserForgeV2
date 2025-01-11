@@ -134,14 +134,14 @@ namespace WebAPI.Endpoints
                     return Results.Ok(
                     new
                     {
-                        Message = $"Role with id, {activatedIds[0]} was activated."
+                        Message = $"Role, {activatedIds[0]} was activated."
                     });
                 }
 
                 return Results.Ok(
                     new
                     {
-                        Message = $"Roles with ids, {string.Join(",", activatedIds)} were activated."
+                        Message = $"Roles, {string.Join(", ", activatedIds)} were activated."
                     });
             })
                 .Produces(StatusCodes.Status200OK);
