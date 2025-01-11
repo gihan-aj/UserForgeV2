@@ -1,5 +1,6 @@
 ﻿using Application.Permissions.Commands.Activate;
 using Application.Permissions.Commands.Create;
+using Application.Permissions.Commands.Deactivate;
 using Application.Permissions.Commands.Update;
 using Application.Permissions.Queries.GetAll;
 using Application.Shared.Pagination;
@@ -145,6 +146,45 @@ namespace WebAPI.Endpoints
                     new
                     {
                         Message = $"Permissions with ids, {string.Join(", ", activatedIds)} were activated."
+                    });
+            })
+                .Produces(StatusCodes.Status200OK);
+
+            group.MapPut("deactivate", async (
+                BulkIdsRequest<string> request,
+                HttpContext httpContext,
+                ISender sender,
+                CancellationToken cancellationToken) =>
+            {
+                var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Results.Unauthorized();
+                }
+
+                var command = new DeactivatePermissionsCommand(request.Ids.ToList(), userId);
+                var result = await sender.Send(command, cancellationToken);
+
+                if (result.IsFailure)
+                {
+                    return HandleFailure(result);
+                }
+
+                var activatedIds = result.Value;
+
+                if (activatedIds.Count == 1)
+                {
+                    return Results.Ok(
+                    new
+                    {
+                        Message = $"Permission with id, {activatedIds[0]} was deactivated."
+                    });
+                }
+
+                return Results.Ok(
+                    new
+                    {
+                        Message = $"Permissions with ids, {string.Join(", ", activatedIds)} were deactivated."
                     });
             })
                 .Produces(StatusCodes.Status200OK);
