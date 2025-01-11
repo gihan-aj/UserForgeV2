@@ -91,7 +91,6 @@ namespace Infrastructure.Persistence.Repositories
             return permissions;
         }
 
-
         private static Expression<Func<Permission, object>> GetSortProperty(string? sortColumn)
         {
             return sortColumn?.ToLower() switch

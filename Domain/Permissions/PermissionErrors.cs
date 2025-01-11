@@ -6,13 +6,13 @@ namespace Domain.Permissions
     {
         public static class NotFound
         {
-            public static Error PermissionNotFound(string permissionName) => new("PermissionNotFound", $"Permission with name '{permissionName}' not found.");
+            public static Error PermissionNotFound(string permissionId) => new("PermissionNotFound", $"Permission with id '{permissionId}' not found.");
             public static Error PermissionsNotFound => new("PermissionsNotFound", "Permissions with gievn ids not found.");
         }
 
         public static class  Confilct
         {
-            public static Error PermissionNameAlreadyExists(string permissionName) => new("PermissionNameAlreadyExists", $"Permission with name '{permissionName}' already exists.");
+            public static Error PermissionNameAlreadyExists(string permissionId) => new("PermissionNameAlreadyExists", $"Permission with id '{permissionId}' already exists.");
         }
 
         public static class General
