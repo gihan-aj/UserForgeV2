@@ -5,6 +5,7 @@ using Application.Roles.Commands.Deactivate;
 using Application.Roles.Commands.Delete;
 using Application.Roles.Commands.Update;
 using Application.Roles.Queries.GetAll;
+using Application.Roles.Queries.GetRolePermissions;
 using Application.Shared.Requesets;
 using Application.UserManagement.Commands.AssignRoles;
 using Domain.Roles;
@@ -132,6 +133,22 @@ namespace WebAPI.Endpoints
                 return Results.NoContent();
             })
                 .Produces(StatusCodes.Status204NoContent);
+
+            group.MapGet("permissions", async (
+                string roleId,
+                ISender sender,
+                CancellationToken cancellationToken) =>
+            {
+                var query = new GetRolePermissionsQuery(roleId);
+                var result = await sender.Send(query, cancellationToken);
+                if (result.IsFailure)
+                {
+                    return HandleFailure(result);
+                }
+
+                return Results.Ok(result.Value);
+            })
+                .Produces(StatusCodes.Status200OK, typeof(GetRolePermissionsResponse));
 
             group.MapPut("activate", async (
                 BulkIdsRequest<string> ids,
@@ -295,6 +312,12 @@ namespace WebAPI.Endpoints
                 { Error: { Code: "MissingPermissions" } } =>
                 Results.Problem(ErrorHandler.CreateProblemDetails(
                     "Missing Permissions",
+                    StatusCodes.Status404NotFound,
+                    result.Error)),
+                
+                { Error: { Code: "NoPermissionsFound" } } =>
+                Results.Problem(ErrorHandler.CreateProblemDetails(
+                    "No Permissions Found",
                     StatusCodes.Status404NotFound,
                     result.Error)),
 

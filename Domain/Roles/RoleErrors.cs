@@ -14,5 +14,9 @@ namespace Domain.Roles
         {
             public static Error RoleNameAlreadyExists(string roleName) => new("RoleNameAlreadyExists", $"A role with name: {roleName} already exists.");
         }
+        public static class Permissions
+        {
+            public static Error NoPermissionsFound(string roleName) => new("NoPermissionsFound", $"No permissions found on role, {roleName}");
+        }
     }
 }
