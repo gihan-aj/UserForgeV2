@@ -24,6 +24,8 @@ namespace Application.Abstractions.Services
 
         Task<Role?> GetRoleById(string id);
 
+        Task<Role?> GetRoleWithRolePermissionsAsync(string id);
+
         Task<Result<List<string>>> ActivateRolesAsync(List<string> ids, string modifiedBy, CancellationToken cancellationToken);
 
         Task<Result<List<string>>> DeactivateRolesAsync(List<string> ids, string modifiedBy, CancellationToken cancellationToken);

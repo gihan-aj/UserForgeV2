@@ -1,6 +1,9 @@
 ﻿using Application.Permissions.Queries.GetAll;
 using Application.Shared.Pagination;
 using Domain.Permissions;
+using Domain.Roles;
+using SharedKernal;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -24,6 +27,12 @@ namespace Application.Abstractions.Repositories
             string? sortOrder,
             int page,
             int pageSize,
+            CancellationToken cancellationToken);
+
+        Task<Result> AssignRolePermissionsAsync(
+            Role role,
+            List<string> permissionIds,
+            string modifiedBy,
             CancellationToken cancellationToken);
     }
 }

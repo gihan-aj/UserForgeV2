@@ -11,16 +11,21 @@ using Application.Permissions.Queries.GetAll;
 using System.Threading;
 using System.Linq;
 using System.Collections.Generic;
+using SharedKernal;
+using Microsoft.AspNetCore.Identity;
+using Domain.RolePermissions;
 
 namespace Infrastructure.Persistence.Repositories
 {
     public class PermissionsRepository : IPermissionsRepository
     {
         private readonly IApplicationDbContext _context;
+        private readonly RoleManager<Role> _roleManager;
 
-        public PermissionsRepository(IApplicationDbContext context)
+        public PermissionsRepository(IApplicationDbContext context, RoleManager<Role> roleManager)
         {
             _context = context;
+            _roleManager = roleManager;
         }
 
         public void Add(Permission permission)
@@ -89,6 +94,33 @@ namespace Infrastructure.Persistence.Repositories
                 cancellationToken);
 
             return permissions;
+        }
+
+        public async Task<Result> AssignRolePermissionsAsync(
+            Role role, 
+            List<string>permissionIds, 
+            string modifiedBy, 
+            CancellationToken cancellationToken)
+        {
+            _context.RolePermissions.RemoveRange(role.RolePermissions);
+
+            if (permissionIds.Any())
+            {
+                var permissions = await _context.Permissions
+                    .Where(p => permissionIds.Contains(p.Id))
+                    .ToListAsync(cancellationToken);
+
+                if(permissions.Count != permissionIds.Count)
+                {
+                    return PermissionErrors.NotFound.MissingPermissions;
+                }
+
+                role.AddRolePermissionsRange(permissions, modifiedBy);
+            }
+
+            await _context.SaveChangesAsync(cancellationToken);
+            return Result.Success();
+
         }
 
         private static Expression<Func<Permission, object>> GetSortProperty(string? sortColumn)

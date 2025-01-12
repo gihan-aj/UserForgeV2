@@ -1,4 +1,5 @@
-﻿using Domain.Primitives;
+﻿using Domain.Permissions;
+using Domain.Primitives;
 using Domain.RolePermissions;
 using Microsoft.AspNetCore.Identity;
 using System;
@@ -63,6 +64,21 @@ namespace Domain.Roles
             IsActive = false;
             LastModifiedOn = DateTime.UtcNow;
             LastModifiedBy = modifiedBy;
+        }
+
+        public void AddRolePermissionsRange(List<Permission> permissions, string modifiedBy)
+        {
+            foreach (var permission in permissions)
+            {
+                RolePermissions.Add(new RolePermission
+                {
+                    RoleId = Id,
+                    PermissionId = permission.Id,
+                });
+            }
+
+            LastModifiedBy = modifiedBy;
+            LastModifiedOn = DateTime.UtcNow;
         }
     }
 }

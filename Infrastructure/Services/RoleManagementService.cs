@@ -113,6 +113,13 @@ namespace Infrastructure.Services
             return await _roleManager.FindByIdAsync(id);
         }
 
+        public async Task<Role?> GetRoleWithRolePermissionsAsync(string id)
+        {
+            return await _roleManager.Roles
+                .Include(r => r.RolePermissions)
+                .FirstOrDefaultAsync(r => r.Id == id);
+        }
+
         public async Task<Result<List<string>>> ActivateRolesAsync(List<string> ids, string modifiedBy, CancellationToken cancellationToken)
         {
             var roles = await _roleManager.Roles

@@ -1,10 +1,12 @@
 ﻿using Application.Roles.Commands.Activate;
+using Application.Roles.Commands.AssignPermissions;
 using Application.Roles.Commands.Create;
 using Application.Roles.Commands.Deactivate;
 using Application.Roles.Commands.Delete;
 using Application.Roles.Commands.Update;
 using Application.Roles.Queries.GetAll;
 using Application.Shared.Requesets;
+using Application.UserManagement.Commands.AssignRoles;
 using Domain.Roles;
 using Domain.Users;
 using MediatR;
@@ -107,6 +109,29 @@ namespace WebAPI.Endpoints
                 return Results.Ok(result.Value);
             })
                 .Produces(StatusCodes.Status200OK);
+
+            group.MapPut("permissions", async (
+                AssignRolePermissionsRequest request,
+                HttpContext httpContext,
+                ISender sender,
+                CancellationToken cancellationToken) =>
+            {
+                var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Results.Unauthorized();
+                }
+
+                var command = new AssignRolePermissionsCommand(request.RoleId, request.PermissionIds, userId);
+                var result = await sender.Send(command, cancellationToken);
+                if (result.IsFailure)
+                {
+                    return HandleFailure(result);
+                }
+
+                return Results.NoContent();
+            })
+                .Produces(StatusCodes.Status204NoContent);
 
             group.MapPut("activate", async (
                 BulkIdsRequest<string> ids,
@@ -265,6 +290,12 @@ namespace WebAPI.Endpoints
                 Results.Problem(ErrorHandler.CreateProblemDetails(
                     "Role Name Already Exists",
                     StatusCodes.Status409Conflict,
+                    result.Error)),
+                
+                { Error: { Code: "MissingPermissions" } } =>
+                Results.Problem(ErrorHandler.CreateProblemDetails(
+                    "Missing Permissions",
+                    StatusCodes.Status404NotFound,
                     result.Error)),
 
                 _ => Results.Problem(ErrorHandler.CreateProblemDetails(
