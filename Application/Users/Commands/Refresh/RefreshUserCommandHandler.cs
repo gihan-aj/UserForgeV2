@@ -82,16 +82,16 @@ namespace Application.Users.Commands.Refresh
 
             var refreshUserResponse = new RefreshUserResponse(user, roles, accessToken, refreshToken);
 
-            var settings = await _userSettingsRepository.GetByUserIdAsync(user.Id);
-            if (settings is not null)
-            {
-                refreshUserResponse.UserSettings = new BasicUserSettings(
-                    settings.Theme,
-                    settings.Language,
-                    settings.DateFormat,
-                    settings.TimeFormat,
-                    settings.TimeZone);
-            }
+            //var settings = await _userSettingsRepository.GetByUserIdAsync(user.Id);
+            //if (settings is not null)
+            //{
+            //    refreshUserResponse.UserSettings = new BasicUserSettings(
+            //        settings.Theme,
+            //        settings.Language,
+            //        settings.DateFormat,
+            //        settings.TimeFormat,
+            //        settings.TimeZone);
+            //}
 
             return Result.Success(refreshUserResponse);
         }

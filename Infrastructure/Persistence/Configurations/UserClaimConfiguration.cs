@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Domain.Common;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -10,7 +11,7 @@ namespace Infrastructure.Persistence.Configurations
         {
             builder.HasKey(uc => uc.Id);
 
-            builder.ToTable("AspNetUserClaims");
+            builder.ToTable(TableNames.UserClaims);
         }
     }
 }

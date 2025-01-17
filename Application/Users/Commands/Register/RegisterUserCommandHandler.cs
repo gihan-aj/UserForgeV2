@@ -45,8 +45,8 @@ namespace Application.Users.Commands.Register
 
             var newUser = newUserResult.Value;
 
-            var settings = new UserSettings(newUser.Id);
-            _userSettingsRepository.Add(settings);
+            //var settings = new UserSettings(newUser.Id);
+            //_userSettingsRepository.Add(settings);
 
             var tokenResult = await _userService.GenerateEmailConfirmationTokenAsync(newUser);
             if (tokenResult.IsFailure)

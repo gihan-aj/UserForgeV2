@@ -4,6 +4,8 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Net.Http;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace Infrastructure.Authentication
@@ -22,8 +24,10 @@ namespace Infrastructure.Authentication
             AuthorizationHandlerContext context, 
             PermissionRequirement requirement)
         {
-            string? userId = context.User.Claims.FirstOrDefault(
-                x => x.Type == JwtRegisteredClaimNames.Sub)?.Value;
+            //string? userId = context.User.Claims.FirstOrDefault(
+            //    x => x.Type == JwtRegisteredClaimNames.NameId)?.Value;
+
+            string? userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             if (userId is null)
             {

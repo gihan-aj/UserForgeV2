@@ -1,5 +1,6 @@
 ﻿using Domain.Primitives;
 using Domain.RolePermissions;
+using Domain.Roles;
 using System;
 using System.Collections.Generic;
 
@@ -39,6 +40,8 @@ namespace Domain.Permissions
 
         public bool IsDeleted { get; set; } = false;
 
+        public virtual ICollection<RolePermission> RolePermissions { get; private set; } = [];
+
         public static Permission Create(string name, string? description, string createdBy)
         {
              return new Permission(name, description, createdBy);
@@ -64,6 +67,21 @@ namespace Domain.Permissions
             IsActive = false;
             LastModifiedBy = modifideBy;
             LastModifiedOn = DateTime.UtcNow;
+        }
+
+        public void AddRolePermissionsRange(List<Role> roles, string modifiedBy)
+        {
+            foreach (Role role in roles)
+            {
+                RolePermissions.Add(new RolePermission
+                {
+                    RoleId = role.Id,
+                    PermissionId = Id
+                });
+
+                LastModifiedBy = modifiedBy;
+                LastModifiedOn = DateTime.UtcNow;
+            }
         }
     }
 }

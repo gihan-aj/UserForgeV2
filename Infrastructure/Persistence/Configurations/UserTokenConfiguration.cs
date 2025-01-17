@@ -1,4 +1,4 @@
-﻿using Domain.Users;
+﻿using Domain.Common;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -17,7 +17,7 @@ namespace Infrastructure.Persistence.Configurations
             builder.Property(t => t.Name).HasMaxLength(450);
 
             // Maps to the AspNetUserTokens table
-            builder.ToTable("AspNetUserTokens");
+            builder.ToTable(TableNames.UserTokens);
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using Domain.Users;
+﻿using Domain.Common;
+using Domain.Users;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -18,7 +19,7 @@ namespace Infrastructure.Persistence.Configurations
             builder.Property(l => l.ProviderKey).HasMaxLength(450);
 
             // Maps to the AspNetUserLogins table
-            builder.ToTable("AspNetUserLogins");
+            builder.ToTable(TableNames.UserLogins);
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Application.Abstractions.Data;
 using Application.Abstractions.Repositories;
+using Domain.RefreshTokens;
 using Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using SharedKernal;

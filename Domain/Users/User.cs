@@ -1,6 +1,11 @@
 ﻿using Domain.Primitives;
+using Domain.RefreshTokens;
+using Domain.UserRoles;
+using Domain.UserSettings;
 using Microsoft.AspNetCore.Identity;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace Domain.Users
 {
@@ -33,12 +38,28 @@ namespace Domain.Users
         public DateTime? LastModifiedOn { get; private set; }
 
         public string? LastModifiedBy { get; private set; }
+        
+        public DateTime? UserRolesModifiedOn { get; private set; }
+
+        public string? UserRolesModifiedBy { get; private set; }
 
         public DateTime? DeletedOn { get; set; }
 
         public string? DeletedBy { get; set; }
 
         public bool IsDeleted { get; set; }
+
+        public virtual ICollection<UserSetting> UserSettings { get; set; } = [];
+
+        public virtual ICollection<IdentityUserClaim<string>> Claims { get; set; } = [];
+
+        public virtual ICollection<IdentityUserLogin<string>> Logins { get; set; } = [];
+
+        public virtual ICollection<IdentityUserToken<string>> Tokens { get; set; } = [];
+
+        public virtual ICollection<UserRole> UserRoles { get; set; } = [];
+
+        public virtual ICollection<RefreshToken> RefreshTokens { get; set; } = [];
 
         public static User Create(string firstName, string lastName, string email)
         {
@@ -86,8 +107,8 @@ namespace Domain.Users
 
         public void UserRolesModified(string modifiedBy)
         {
-            LastModifiedBy = modifiedBy;
-            LastModifiedOn = DateTime.UtcNow;
+            UserRolesModifiedBy = modifiedBy;
+            UserRolesModifiedOn = DateTime.UtcNow;
         }
     }
 }

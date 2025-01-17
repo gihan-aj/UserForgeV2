@@ -1,4 +1,6 @@
-﻿using Domain.Users;
+﻿using Domain.Common; 
+using Domain.RefreshTokens;
+using Domain.Users;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -17,8 +19,6 @@ namespace Infrastructure.Persistence.Configurations
 
             builder.HasQueryFilter(u => !u.IsDeleted);
 
-            builder.ToTable("AspNetUsers");
-
             // A concurrency token for use with the optimistic concurrency checking
             builder.Property(u => u.ConcurrencyStamp).IsConcurrencyToken();
 
@@ -30,19 +30,45 @@ namespace Infrastructure.Persistence.Configurations
             builder.Property(u => u.NormalizedEmail).HasMaxLength(256);
 
             // The relationships between User and other entity types
-            // Note that these relationships are configured with no navigation properties
 
             // Each User can have many UserClaims
-            builder.HasMany<IdentityUserClaim<string>>().WithOne().HasForeignKey(uc => uc.UserId).IsRequired();
+            builder.HasMany(u => u.Claims)
+                .WithOne()
+                .HasForeignKey(uc => uc.UserId)
+                .IsRequired();
 
             // Each User can have many UserLogins
-            builder.HasMany<IdentityUserLogin<string>>().WithOne().HasForeignKey(ul => ul.UserId).IsRequired();
+            builder.HasMany(u => u.Logins)
+                .WithOne()
+                .HasForeignKey(ul => ul.UserId)
+                .IsRequired();
 
             // Each User can have many UserTokens
-            builder.HasMany<IdentityUserToken<string>>().WithOne().HasForeignKey(ut => ut.UserId).IsRequired();
+            builder.HasMany(u => u.Tokens)
+                .WithOne()
+                .HasForeignKey(ut => ut.UserId)
+                .IsRequired();
 
             // Each User can have many entries in the UserRole join table
-            builder.HasMany<IdentityUserRole<string>>().WithOne().HasForeignKey(ur => ur.UserId).IsRequired();
+            builder.HasMany(u => u.UserRoles)
+                .WithOne(ur => ur.User)
+                .HasForeignKey(ur => ur.UserId)
+                .IsRequired(false);
+
+            //User settings
+            builder.HasMany(u => u.UserSettings)
+                .WithOne()
+                .HasForeignKey(u => u.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Refresh tokens
+            builder.HasMany(u => u.RefreshTokens)
+                .WithOne(rt => rt.User)
+                .HasForeignKey(rt => rt.UserId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired(false);
+
+            builder.ToTable(TableNames.Users);
         }
     }
 }

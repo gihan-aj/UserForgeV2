@@ -1,4 +1,5 @@
-﻿using Domain.Users;
+﻿using Domain.RefreshTokens;
+using Domain.Users;
 using SharedKernal;
 using System;
 using System.Threading;

@@ -21,23 +21,23 @@ namespace Application.Users.Commands.UpdateUserSettings
 
         public async Task<Result> Handle(UpdateUserSettingsCommand request, CancellationToken cancellationToken)
         {
-            var existingSettings = await _userSettingsRepository.GetByUserIdAsync(request.UserId);
-            if(existingSettings is null)
-            {
-                return UserErrors.NotFound.Resource("User settings");
-            }
+            //var existingSettings = await _userSettingsRepository.GetByUserIdAsync(request.UserId);
+            //if(existingSettings is null)
+            //{
+            //    return UserErrors.NotFound.Resource("User settings");
+            //}
 
-            existingSettings.Update(
-                request.Theme, 
-                request.Language, 
-                request.DateFormat, 
-                request.TimeFormat, 
-                request.TimeZone, 
-                request.NotificationsEnabled, 
-                request.EmailNotification, 
-                request.SmsNotification);
+            //existingSettings.Update(
+            //    request.Theme, 
+            //    request.Language, 
+            //    request.DateFormat, 
+            //    request.TimeFormat, 
+            //    request.TimeZone, 
+            //    request.NotificationsEnabled, 
+            //    request.EmailNotification, 
+            //    request.SmsNotification);
 
-            _userSettingsRepository.Update(existingSettings);
+            //_userSettingsRepository.Update(existingSettings);
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 

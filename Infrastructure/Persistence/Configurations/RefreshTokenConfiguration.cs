@@ -1,7 +1,7 @@
-﻿using Domain.Users;
+﻿using Domain.Common;
+using Domain.RefreshTokens;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System;
 
 namespace Infrastructure.Persistence.Configurations
 {
@@ -14,12 +14,14 @@ namespace Infrastructure.Persistence.Configurations
             builder.Property(rt => rt.Token).HasMaxLength(450).IsRequired();
             builder.Property(rt => rt.DeviceIdentifierHash).HasMaxLength(450).IsRequired();
 
-            builder.HasOne<User>()
-                .WithMany()
-                .HasForeignKey(rt => rt.UserId)
-                .IsRequired();
+            builder.HasIndex(rt => rt.UserId);
 
-            builder.ToTable("RefreshTokens");
+            builder.HasOne(rt => rt.User)
+                .WithMany(u => u.RefreshTokens)
+                .HasForeignKey(rt => rt.UserId)
+                .IsRequired(false);
+
+            builder.ToTable(TableNames.RefreshTokens);
         }
     }
 }

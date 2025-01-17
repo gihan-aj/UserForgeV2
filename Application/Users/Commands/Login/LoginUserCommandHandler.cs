@@ -81,16 +81,16 @@ namespace Application.Users.Commands.Login
 
             var loginResponse = new LoginUserResponse(user, roles, accessToken, refreshToken);
 
-            var settings = await _userSettingsRepository.GetByUserIdAsync(user.Id);
-            if(settings is not null)
-            {
-                loginResponse.UserSettings = new BasicUserSettings(
-                    settings.Theme,
-                    settings.Language,
-                    settings.DateFormat,
-                    settings.TimeFormat,
-                    settings.TimeZone);
-            }
+            //var settings = await _userSettingsRepository.GetByUserIdAsync(user.Id);
+            //if(settings is not null)
+            //{
+            //    loginResponse.UserSettings = new BasicUserSettings(
+            //        settings.Theme,
+            //        settings.Language,
+            //        settings.DateFormat,
+            //        settings.TimeFormat,
+            //        settings.TimeZone);
+            //}
 
             return Result.Success(loginResponse);
         }

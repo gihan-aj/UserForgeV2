@@ -21,9 +21,23 @@ namespace Infrastructure.Authentication
             _context = context;
         }
 
-        public Task<HashSet<string>> GetPermissionsAsync(string userId)
+        public async Task<HashSet<string>> GetPermissionsAsync(string userId)
         {
-            throw new NotImplementedException();
+            IEnumerable<Role>[] roles = await _context.Set<User>()
+                .Include(u => u.UserRoles)
+                .ThenInclude(ur => ur.Role)
+                .ThenInclude(r => r.RolePermissions)
+                .ThenInclude(rp => rp.Permission)
+                .Where(u => u.Id == userId)
+                .Select(u => u.UserRoles.Select(ur => ur.Role))
+                .ToArrayAsync();
+
+            return roles
+                .SelectMany(r => r)
+                .SelectMany(u => u.RolePermissions)
+                .Select(ur => ur.Permission)
+                .Select(p => p.Name)
+                .ToHashSet();
         }
 
         //public async Task<HashSet<string>> GetPermissionsAsync(string userId)

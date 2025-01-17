@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 
 namespace Domain.Permissions
@@ -10,6 +11,23 @@ namespace Domain.Permissions
             .Where(field => field.FieldType == typeof(string))
             .Select(field => (string?)field.GetValue(null))
             .ToArray();
+
+        //private static readonly string[] Permissions =
+        //{
+        //    "user.access",
+        //    "user.read",
+        //    "user.status",
+        //    "user.edit",
+        //    "user.delete"
+        //};
+
+        //public static IEnumerable<string> GetPermissions()
+        //{
+        //    foreach (var permission in Permissions)
+        //    {
+        //        yield return permission;
+        //    }
+        //}
 
         public const string UserAccess = "user.access";
         public const string UserRead = "user.read";

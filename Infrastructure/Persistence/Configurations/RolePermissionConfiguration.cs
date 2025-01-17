@@ -1,4 +1,6 @@
-﻿using Domain.RolePermissions;
+﻿using Domain.Common;
+using Domain.RolePermissions;
+using Domain.Roles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
@@ -17,11 +19,12 @@ namespace Infrastructure.Persistence.Configurations
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasOne(rp => rp.Permission)
-                .WithMany()
+                .WithMany(p => p.RolePermissions)
                 .HasForeignKey(rp => rp.PermissionId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.ToTable("RolePermissions");
+            builder.ToTable(TableNames.RolePermissions);
         }
+
     }
 }

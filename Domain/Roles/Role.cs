@@ -1,16 +1,20 @@
 ﻿using Domain.Permissions;
 using Domain.Primitives;
 using Domain.RolePermissions;
+using Domain.UserRoles;
+using Domain.Users;
 using Microsoft.AspNetCore.Identity;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 
 namespace Domain.Roles
 {
     public class Role : IdentityRole<string>, IAuditable, ISoftDeletable
     {
-        public Role(string name, string? description, string createdBy) : base(name) 
+        public static readonly Role User = new("user", "Application user", "default");
+        public static readonly Role Admin = new("admin", "Application admin", "default");
+
+        public Role(string name, string? description, string createdBy) : base(name)
         {
             Id = Guid.NewGuid().ToString(); // Explicitly initialize the Id
             Description = string.IsNullOrWhiteSpace(description)
@@ -23,8 +27,6 @@ namespace Domain.Roles
 
         public string? Description { get; private set; }
 
-        public ICollection<RolePermission> RolePermissions { get; set; } = new List<RolePermission>();
-
         public bool IsActive { get; private set; }
 
         public DateTime CreatedOn { get; private set; }
@@ -34,12 +36,20 @@ namespace Domain.Roles
         public DateTime? LastModifiedOn { get; private set; }
 
         public string? LastModifiedBy { get; private set; }
+        
+        public DateTime? PermissionModifiedOn { get; private set; }
+
+        public string? PermissionModifiedBy { get; private set; }
 
         public DateTime? DeletedOn { get; set; }
 
         public string? DeletedBy { get; set; }
 
         public bool IsDeleted { get; set; }
+
+        public virtual ICollection<UserRole> UserRoles { get; private set; } = [];
+
+        public virtual ICollection<RolePermission> RolePermissions { get; private set; } = [];
 
         public void Update(string roleName, string normalizedRoleName, string description, string modifiedBy)
         {
@@ -66,6 +76,21 @@ namespace Domain.Roles
             LastModifiedBy = modifiedBy;
         }
 
+        public void AddUserRolesRange(List<User> users, string modifiedBy)
+        {
+            foreach (var user in users)
+            {
+                UserRoles.Add(new UserRole
+                {
+                    UserId = user.Id,
+                    RoleId = Id
+                });
+
+                LastModifiedBy = modifiedBy;
+                LastModifiedOn = DateTime.UtcNow;
+            }
+        }
+
         public void AddRolePermissionsRange(List<Permission> permissions, string modifiedBy)
         {
             foreach (var permission in permissions)
@@ -77,8 +102,8 @@ namespace Domain.Roles
                 });
             }
 
-            LastModifiedBy = modifiedBy;
-            LastModifiedOn = DateTime.UtcNow;
+            PermissionModifiedBy = modifiedBy;
+            PermissionModifiedOn = DateTime.UtcNow;
         }
     }
 }

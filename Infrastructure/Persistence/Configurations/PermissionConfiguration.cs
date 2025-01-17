@@ -1,6 +1,9 @@
-﻿using Domain.Permissions;
+﻿using Domain.Common;
+using Domain.Permissions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Infrastructure.Persistence.Configurations
 {
@@ -15,11 +18,20 @@ namespace Infrastructure.Persistence.Configurations
             builder.HasIndex(x => x.Name).IsUnique().HasFilter("[IsDeleted] = 0");
             builder.HasIndex(x => x.IsDeleted);
 
+            builder.HasMany(p => p.RolePermissions)
+                .WithOne(rp => rp.Permission)
+                .HasForeignKey(rp => rp.PermissionId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired(false);
+
             builder.HasQueryFilter(u => !u.IsDeleted);
 
-            // Maps to the AspNetRoles table
-            builder.ToTable("Permissions");
+            builder.ToTable(TableNames.Permissions);
 
+            //IEnumerable<Permission> permissions = DefaultPermissions.AllPermissions
+            //    .Select(p => Permission.Create(p, null, "default"));
+
+            //builder.HasData(permissions);
         }
     }
 }

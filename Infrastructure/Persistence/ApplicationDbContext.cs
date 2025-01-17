@@ -10,14 +10,29 @@ using Application.Abstractions.Data;
 using Domain.Roles;
 using Domain.Permissions;
 using Domain.RolePermissions;
+using Domain.RefreshTokens;
+using Microsoft.AspNetCore.Identity;
+using Domain.UserRoles;
+using Domain.UserSettings;
 
 namespace Infrastructure.Persistence
 {
-    public class ApplicationDbContext : IdentityDbContext<User, Role, string>, IApplicationDbContext, IUnitOfWork
+    public class ApplicationDbContext 
+        : IdentityDbContext<
+            User, 
+            Role, 
+            string,
+            IdentityUserClaim<string>,
+            UserRole,
+            IdentityUserLogin<string>,
+            IdentityRoleClaim<string>,
+            IdentityUserToken<string>>
+        , IApplicationDbContext
+        , IUnitOfWork
     {
         public DbSet<RefreshToken> RefreshTokens { get; set; }
 
-        public DbSet<UserSettings> UserSettings { get; set; }
+        public DbSet<UserSetting> UserSettings { get; set; }
 
         public DbSet<Permission> Permissions { get; set; }
 

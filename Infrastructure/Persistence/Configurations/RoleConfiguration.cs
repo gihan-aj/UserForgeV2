@@ -1,4 +1,5 @@
-﻿using Domain.Roles;
+﻿using Domain.Common;
+using Domain.Roles;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -21,9 +22,6 @@ namespace Infrastructure.Persistence.Configurations
 
             builder.HasQueryFilter(u => !u.IsDeleted);
 
-            // Maps to the AspNetRoles table
-            builder.ToTable("AspNetRoles");
-
             // A concurrency token for use with the optimistic concurrency checking
             builder.Property(r => r.ConcurrencyStamp).IsConcurrencyToken();
 
@@ -35,16 +33,27 @@ namespace Infrastructure.Persistence.Configurations
             // Note that these relationships are configured with no navigation properties
 
             // Each Role can have many entries in the UserRole join table
-            builder.HasMany<IdentityUserRole<string>>().WithOne().HasForeignKey(ur => ur.RoleId).IsRequired();
+            builder.HasMany(r => r.UserRoles)
+                .WithOne(ur => ur.Role)
+                .HasForeignKey(ur => ur.RoleId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // Each Role can have many associated RoleClaims
-            builder.HasMany<IdentityRoleClaim<string>>().WithOne().HasForeignKey(rc => rc.RoleId).IsRequired();
+            builder.HasMany<IdentityRoleClaim<string>>()
+                .WithOne()
+                .HasForeignKey(rc => rc.RoleId)
+                .IsRequired();
 
             // Each Role can have many associated RolePermissions
             builder.HasMany(r => r.RolePermissions)
                 .WithOne(rp => rp.Role)
                 .HasForeignKey(rp => rp.RoleId)
+                .IsRequired(false)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // Maps to the AspNetRoles table
+            builder.ToTable(TableNames.Roles);
         }
     }
 }

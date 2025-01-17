@@ -5,7 +5,9 @@ using Application.UserManagement.Commands.AssignRoles;
 using Application.UserManagement.Commands.Deactivate;
 using Application.UserManagement.Commands.Delete;
 using Application.UserManagement.Queries.GetAll;
+using Domain.Permissions;
 using Domain.Roles;
+using Infrastructure.Authentication;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -13,7 +15,6 @@ using Microsoft.AspNetCore.Routing;
 using SharedKernal;
 using System;
 using System.Linq;
-using System.Net.Http;
 using System.Security.Claims;
 using System.Threading;
 using WebAPI.Helpers;
@@ -29,7 +30,7 @@ namespace WebAPI.Endpoints
                 .RequireAuthorization(policy => policy.RequireRole(Roles.Admin))
                 .WithTags("User Management");
 
-            group.MapGet("", async (
+            group.MapGet("",[HasPermission(DefaultPermissions.UserAccess)] async (
                 string? searchTerm,
                 string? sortColumn,
                 string? sortOrder,

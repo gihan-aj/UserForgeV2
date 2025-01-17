@@ -1,6 +1,7 @@
-﻿using System;
+﻿using Domain.Users;
+using System;
 
-namespace Domain.Users
+namespace Domain.RefreshTokens
 {
     public class RefreshToken
     {
@@ -12,17 +13,24 @@ namespace Domain.Users
             ExpiryDate = expiryDate;
             UserId = userId;
             DeviceIdentifierHash = deviceIdentifierHash;
-            
+
         }
 
         public Guid Id { get; private set; }
+
         public string Token { get; private set; }
+
         public DateTime ExpiryDate { get; private set; }
+
         public string UserId { get; private set; } // Foreign key to User
+
         public string DeviceIdentifierHash { get; private set; }
 
         public bool IsRevoked { get; private set; } = false;
+
         public bool IsExpired => DateTime.UtcNow >= ExpiryDate;
+
+        public virtual User User { get; set; } = null!;
 
         public void Revoke()
         {
@@ -33,10 +41,10 @@ namespace Domain.Users
         {
             Token = token;
             ExpiryDate = expiryDate;
-            if(IsRevoked)
+            if (IsRevoked)
             {
                 IsRevoked = false;
-            }     
+            }
         }
     }
 }

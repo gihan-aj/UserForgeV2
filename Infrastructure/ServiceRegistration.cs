@@ -1,5 +1,6 @@
 ﻿using Application.Abstractions.Repositories;
 using Application.Abstractions.Services;
+using Infrastructure.Authentication;
 using Infrastructure.Persistence.Repositories;
 using Infrastructure.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,6 +20,8 @@ namespace Infrastructure
             services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
             services.AddScoped<IUserSettingsRepository, UserSettingsRepository>();
             services.AddScoped<IPermissionsRepository, PermissionsRepository>();
+
+            services.AddTransient<IPermissionService, PermissionService>();
 
             return services;
         }

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Domain.Common;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -12,7 +13,7 @@ namespace Infrastructure.Persistence.Configurations
             builder.HasKey(rc => rc.Id);
 
             // Maps to the AspNetRoleClaims table
-            builder.ToTable("AspNetRoleClaims");
+            builder.ToTable(TableNames.RoleClaims);
         }
     }
 }
