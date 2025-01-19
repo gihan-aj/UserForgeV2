@@ -20,23 +20,9 @@ namespace Application.Users.Queries.GetUserSettings
 
         public async Task<Result<GetUserSettingsResponse>> Handle(GetUserSettingsQuery request, CancellationToken cancellationToken)
         {
-            //var settings = await _userSettingsRepository.GetByUserIdAsync(request.UserId);
-            //if(settings is null)
-            //{
-            //    return Result.Failure<GetUserSettingsResponse>(UserErrors.NotFound.Resource("User setiings"));
-            //}
+            var userSetings = await _userSettingsRepository.GetUserSettings(request.UserId, cancellationToken);
 
-            //return new GetUserSettingsResponse(
-            //    settings.Theme,
-            //    settings.Language,
-            //    settings.DateFormat,
-            //    settings.TimeFormat,
-            //    settings.TimeZone,
-            //    settings.NotificationsEnabled,
-            //    settings.EmailNotification,
-            //    settings.SmsNotification);
-
-            return new GetUserSettingsResponse("","","","","",true,true,true);
+            return new GetUserSettingsResponse(userSetings);
         }
     }
 }

@@ -8,6 +8,7 @@ using Domain.Users;
 using Microsoft.Extensions.Options;
 using SharedKernal;
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -55,18 +56,25 @@ namespace Application.Users.Commands.Refresh
                 return Result.Failure<RefreshUserResponse>(UserErrors.Token.InvalidRefreshToken);
             }
 
-            var userResult = await _userService.GetByIdAsync(existingToken.UserId);
-            if (userResult.IsFailure)
+            //var userResult = await _userService.GetByIdAsync(existingToken.UserId);
+            //if (userResult.IsFailure)
+            //{
+            //    return Result.Failure<RefreshUserResponse>(userResult.Error);
+            //}
+
+            var user = existingToken.User;
+            if(user is null)
             {
-                return Result.Failure<RefreshUserResponse>(userResult.Error);
+                return Result.Failure<RefreshUserResponse>(UserErrors.Token.InvalidRefreshToken);
             }
 
-            var user = userResult.Value;
+            //var rolesResult = await _userService.GetRolesAsync(user);
+            var roles = user.UserRoles
+                .Select(ur => ur.Role)
+                .Select(r => r.Name)
+                .ToArray();
 
-            var rolesResult = await _userService.GetRolesAsync(user);
-            var roles = rolesResult.Value;
-
-            var accessToken = _tokenService.CreateJwtToken(user, roles);
+            var accessToken = _tokenService.CreateJwtToken(user, roles!);
 
             string refreshToken = _tokenService.GenerateRefreshToken();
 
@@ -80,7 +88,7 @@ namespace Application.Users.Commands.Refresh
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            var refreshUserResponse = new RefreshUserResponse(user, roles, accessToken, refreshToken);
+            var refreshUserResponse = new RefreshUserResponse(user, accessToken, refreshToken);
 
             //var settings = await _userSettingsRepository.GetByUserIdAsync(user.Id);
             //if (settings is not null)

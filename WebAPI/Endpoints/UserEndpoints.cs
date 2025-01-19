@@ -7,10 +7,10 @@ using Application.Users.Commands.Refresh;
 using Application.Users.Commands.Register;
 using Application.Users.Commands.ResendEmailConfirmation;
 using Application.Users.Commands.ResetPassword;
+using Application.Users.Commands.SaveUserSettings;
 using Application.Users.Commands.SendEmailChange;
 using Application.Users.Commands.SendPasswordReset;
 using Application.Users.Commands.Update;
-using Application.Users.Commands.UpdateUserSettings;
 using Application.Users.Queries.GetUser;
 using Application.Users.Queries.GetUserSettings;
 using Domain.Users;
@@ -23,7 +23,6 @@ using System;
 using System.Security.Claims;
 using System.Threading;
 using WebAPI.Helpers;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace WebAPI.Endpoints
 {
@@ -339,7 +338,7 @@ namespace WebAPI.Endpoints
                 .RequireAuthorization();
 
             group.MapPut("update-user-settings", async (
-                UpdateUserSettingsRequest request,
+                SaveUserSettingsRequest request,
                 HttpContext httpContext,
                 ISender sender,
                 CancellationToken cancellationToken) =>
@@ -350,16 +349,23 @@ namespace WebAPI.Endpoints
                     return Results.Unauthorized();
                 }
 
-                var command = new UpdateUserSettingsCommand(
-                    userId,
+                //var command = new UpdateUserSettingsCommand(
+                //    userId,
+                //    request.Theme,
+                //    request.Language,
+                //    request.DateFormat,
+                //    request.TimeFormat,
+                //    request.TimeZone,
+                //    request.NotificationsEnabled,
+                //    request.EmailNotification,
+                //    request.SmsNotification);
+                
+                var command = new SaveUserSettingsCommand(
                     request.Theme,
-                    request.Language,
+                    request.PageSize,
                     request.DateFormat,
                     request.TimeFormat,
-                    request.TimeZone,
-                    request.NotificationsEnabled,
-                    request.EmailNotification,
-                    request.SmsNotification);
+                    userId);
 
                 var result = await sender.Send(command, cancellationToken);
                 if (result.IsFailure)

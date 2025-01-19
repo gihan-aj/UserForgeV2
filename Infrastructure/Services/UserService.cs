@@ -4,6 +4,7 @@ using Domain.Roles;
 using Domain.Users;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.EntityFrameworkCore;
 using SharedKernal;
 using System;
 using System.Collections.Generic;
@@ -104,9 +105,19 @@ namespace Infrastructure.Services
             return user;
         }
 
-        public async Task<Result<User>> LoginAsync(string email, string password)
+        public async Task<Result<User>> LoginAsync(string email, string password, string hashedDeviceIdentifier)
         {
-            var user = await _userManager.FindByEmailAsync(email);
+            //var user = await _userManager.FindByEmailAsync(email);
+
+            var normalizedEmail = _userManager.NormalizeEmail(email);
+
+            var user = _userManager.Users
+                .Include(u => u.UserRoles)
+                .ThenInclude(ur => ur.Role)
+                .Include(u => u.UserSettings)
+                .Include(u => u.RefreshTokens.Where(rt => rt.DeviceIdentifierHash == hashedDeviceIdentifier))
+                .FirstOrDefault(u => u.NormalizedEmail == normalizedEmail);
+
             if(user is null)
             {
                 return Result.Failure<User>(UserErrors.Validation.InvalidCredentials);

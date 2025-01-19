@@ -22,7 +22,7 @@ namespace Application.Abstractions.Services
 
         Task<Result<User>> FindByEmailAsync(string email);
 
-        Task<Result<User>> LoginAsync(string email, string password);
+        Task<Result<User>> LoginAsync(string email, string password, string hashedDeviceIdentifier);
 
         Task<Result<string[]>> GetRolesAsync(User user);
 

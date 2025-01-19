@@ -6,6 +6,7 @@ using Application.Settings;
 using Microsoft.Extensions.Options;
 using SharedKernal;
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -39,7 +40,9 @@ namespace Application.Users.Commands.Login
 
         public async Task<Result<LoginUserResponse>> Handle(LoginUserCommand request, CancellationToken cancellationToken)
         {
-            var loginResult = await _userService.LoginAsync(request.Email, request.Password);
+            var hashedDeviceIdentifier = _tokenService.Hash(request.DeviceIdentifier);
+
+            var loginResult = await _userService.LoginAsync(request.Email, request.Password, hashedDeviceIdentifier);
             if (loginResult.IsFailure)
             {
                 return Result.Failure<LoginUserResponse>(loginResult.Error);
@@ -47,18 +50,20 @@ namespace Application.Users.Commands.Login
 
             var user = loginResult.Value;
 
-            var rolesResult = await _userService.GetRolesAsync(user);
-            var roles = rolesResult.Value;
+            //var rolesResult = await _userService.GetRolesAsync(user);
+            string?[] roles = user.UserRoles
+                .Select(ur => ur.Role)
+                .Select(r => r.Name)
+                .ToArray();
 
-            var accessToken = _tokenService.CreateJwtToken(user, roles);
+            var accessToken = _tokenService.CreateJwtToken(user, roles!);
 
             string refreshToken = _tokenService.GenerateRefreshToken();  
 
             var refreshTokenExpiryDate = DateTime.UtcNow.AddDays(_tokenSettings.RefreshToken.ExpiresInDays);
-
-            var hashedDeviceIdentifier = _tokenService.Hash(request.DeviceIdentifier);
-
-            var existingToken = await _refreshTokenRepository.GetByUserIdAndDeviceAsync(user.Id, hashedDeviceIdentifier);
+         
+            //var existingToken = await _refreshTokenRepository.GetByUserIdAndDeviceAsync(user.Id, hashedDeviceIdentifier);
+            var existingToken = user.RefreshTokens.Any() ? user.RefreshTokens.ToArray()[0] : null;
 
             if (existingToken is null)
             {
@@ -79,7 +84,7 @@ namespace Application.Users.Commands.Login
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            var loginResponse = new LoginUserResponse(user, roles, accessToken, refreshToken);
+            var loginResponse = new LoginUserResponse(user, accessToken, refreshToken);
 
             //var settings = await _userSettingsRepository.GetByUserIdAsync(user.Id);
             //if(settings is not null)

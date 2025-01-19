@@ -38,8 +38,12 @@ namespace Infrastructure.Persistence.Repositories
 
         public Task<RefreshToken?> GetAsync(string refreshToken, string deviceInfo)
         {
-            return _context.RefreshTokens.FirstOrDefaultAsync(rt =>
-                rt.Token == refreshToken && rt.DeviceIdentifierHash == deviceInfo);
+            return _context.RefreshTokens
+                .Include(rt => rt.User)
+                .ThenInclude(u => u.UserRoles)
+                .ThenInclude(ur => ur.Role)
+                .FirstOrDefaultAsync(rt =>
+                    rt.Token == refreshToken && rt.DeviceIdentifierHash == deviceInfo);
         }
         
         public Task<RefreshToken?> GetByUserIdAndDeviceAsync(string userId, string deviceIdentifierHash)

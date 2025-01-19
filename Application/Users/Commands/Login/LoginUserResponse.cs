@@ -1,12 +1,19 @@
 ﻿using Domain.Users;
+using Domain.UserSettings;
+using System.Linq;
 
 namespace Application.Users.Commands.Login
 {
     public class LoginUserResponse
     {
-        public LoginUserResponse(User user, string[] roles, string accessToken, string refreshToken)
+        public LoginUserResponse(User user, string accessToken, string refreshToken)
         {
-            User = new BasicUserInfo(user.Id, user.FirstName, user.LastName, roles);
+            User = new BasicUserInfo(user.Id, user.Email!, user.FirstName, user.LastName);
+            Roles = user.UserRoles
+                .Select(ur => ur.Role)
+                .Select(r => r.Name)
+                .ToArray();
+            UserSettings = user.UserSettings.ToArray();
             AccessToken = accessToken;
             RefreshToken = refreshToken;
         }
@@ -17,6 +24,8 @@ namespace Application.Users.Commands.Login
 
         public BasicUserInfo User {  get; private set; }
 
-        public BasicUserSettings? UserSettings { get; set; } = null;
+        public string?[] Roles { get; private set; }
+
+        public UserSetting[]? UserSettings { get; set; } = null;
     }
 }

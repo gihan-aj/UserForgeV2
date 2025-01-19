@@ -1,12 +1,6 @@
-﻿namespace Application.Users.Queries.GetUserSettings
+﻿using Domain.UserSettings;
+
+namespace Application.Users.Queries.GetUserSettings
 {
-    public record GetUserSettingsResponse(
-        string Theme,
-        string Language,
-        string DateFormat,
-        string TimeFormat,
-        string TimeZone,
-        bool NotificationsEnabled,
-        bool EmailNotification,
-        bool SmsNotification);
+    public record GetUserSettingsResponse(UserSetting[] UserSettings);
 }

@@ -2,9 +2,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
-using System.Net.Http;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
@@ -36,10 +33,10 @@ namespace Infrastructure.Authentication
 
             using IServiceScope scope = _scopeFactory.CreateScope();
 
-            IPermissionService permissionsRepository = scope.ServiceProvider
+            IPermissionService permissionsService = scope.ServiceProvider
                 .GetRequiredService<IPermissionService>();
 
-            HashSet<string> permissions =  await permissionsRepository
+            HashSet<string> permissions =  await permissionsService
                 .GetPermissionsAsync(userId);
 
             if (permissions.Contains(requirement.Permission))
