@@ -72,6 +72,3 @@ UserForge is a robust and flexible user management system designed to simplify a
 
 ## License
 This project is licensed under the MIT License. See the LICENSE file for details.
-
-## Contact
-For questions or support, please contact [Your Name](mailto:your.email@example.com).
