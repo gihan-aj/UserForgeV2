@@ -39,12 +39,15 @@ namespace Domain.Permissions
         public const string RolesCreate = "roles.create";         // Create a new role
         public const string RolesRead = "roles.read";             // View role details
         public const string RolesEdit = "roles.edit";             // Edit a role
+        public const string RolesStatusChange = "roles.status";   // activate/deactivate role
         public const string RolesDelete = "roles.delete";         // Delete a role
+        public const string RolesReadPermissions = "roles.read.permissions"; // Manage permissions for roles
         public const string RolesManagePermissions = "roles.manage.permissions"; // Manage permissions for roles
 
         public const string PermissionsCreate = "permissions.create"; // Create a new permission
         public const string PermissionsRead = "permissions.read";     // View permissions
         public const string PermissionsEdit = "permissions.edit";     // Edit a permission
+        public const string PermissionStatusChange = "permission.status";
         public const string PermissionsDelete = "permissions.delete"; // Delete a permission
 
         public const string AuditLogsView = "audit.view";       // View audit logs

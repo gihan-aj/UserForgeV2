@@ -8,8 +8,10 @@ using Application.Roles.Queries.GetAll;
 using Application.Roles.Queries.GetRolePermissions;
 using Application.Shared.Requesets;
 using Application.UserManagement.Commands.AssignRoles;
+using Domain.Permissions;
 using Domain.Roles;
 using Domain.Users;
+using Infrastructure.Authentication;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -31,14 +33,15 @@ namespace WebAPI.Endpoints
         {
             var group = app
                 .MapGroup("roles")
-                .RequireAuthorization(policy => policy.RequireRole(RoleConstants.Admin))
                 .WithTags("Role Management");
 
-            group.MapPost("create", async (
-                CreateRoleRequest request,
-                HttpContext httpContext,
-                ISender sender,
-                CancellationToken cancellationToken) =>
+            group.MapPost("create", 
+                [HasPermission(PermissionConstants.RolesCreate)] 
+                async (
+                    CreateRoleRequest request,
+                    HttpContext httpContext,
+                    ISender sender,
+                    CancellationToken cancellationToken) =>
             {
                 var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
@@ -61,11 +64,13 @@ namespace WebAPI.Endpoints
             })
                 .Produces(StatusCodes.Status201Created);
 
-            group.MapPut("update", async (
-                UpdateRoleRequest request,
-                HttpContext httpContext,
-                ISender sender,
-                CancellationToken cancellationToken) =>
+            group.MapPut("update", 
+                [HasPermission(PermissionConstants.RolesEdit)] 
+                async (
+                    UpdateRoleRequest request,
+                    HttpContext httpContext,
+                    ISender sender,
+                    CancellationToken cancellationToken) =>
             {
                 var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
@@ -89,14 +94,16 @@ namespace WebAPI.Endpoints
             })
                 .Produces(StatusCodes.Status204NoContent);
 
-            group.MapGet("", async (
-                string? searchTerm,
-                string? sortColumn,
-                string? sortOrder,
-                int page,
-                int pageSize,
-                ISender sender,
-                CancellationToken cancellationToken) =>
+            group.MapGet("", 
+                [HasPermission(PermissionConstants.RolesRead)] 
+                async (
+                    string? searchTerm,
+                    string? sortColumn,
+                    string? sortOrder,
+                    int page,
+                    int pageSize,
+                    ISender sender,
+                    CancellationToken cancellationToken) =>
             {
                 var query = new GetAllRolesQuery(
                     searchTerm,
@@ -111,11 +118,13 @@ namespace WebAPI.Endpoints
             })
                 .Produces(StatusCodes.Status200OK);
 
-            group.MapPut("permissions", async (
-                AssignRolePermissionsRequest request,
-                HttpContext httpContext,
-                ISender sender,
-                CancellationToken cancellationToken) =>
+            group.MapPut("permissions", 
+                [HasPermission(PermissionConstants.RolesManagePermissions)] 
+                async (
+                    AssignRolePermissionsRequest request,
+                    HttpContext httpContext,
+                    ISender sender,
+                    CancellationToken cancellationToken) =>
             {
                 var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
@@ -134,10 +143,12 @@ namespace WebAPI.Endpoints
             })
                 .Produces(StatusCodes.Status204NoContent);
 
-            group.MapGet("permissions", async (
-                string roleId,
-                ISender sender,
-                CancellationToken cancellationToken) =>
+            group.MapGet("permissions", 
+                [HasPermission(PermissionConstants.RolesReadPermissions)] 
+                async (
+                    string roleId,
+                    ISender sender,
+                    CancellationToken cancellationToken) =>
             {
                 var query = new GetRolePermissionsQuery(roleId);
                 var result = await sender.Send(query, cancellationToken);
@@ -150,11 +161,13 @@ namespace WebAPI.Endpoints
             })
                 .Produces(StatusCodes.Status200OK, typeof(GetRolePermissionsResponse));
 
-            group.MapPut("activate", async (
-                BulkIdsRequest<string> ids,
-                HttpContext httpContext,
-                ISender sender,
-                CancellationToken cancellationToken) =>
+            group.MapPut("activate", 
+                [HasPermission(PermissionConstants.RolesStatusChange)] 
+                async (
+                    BulkIdsRequest<string> ids,
+                    HttpContext httpContext,
+                    ISender sender,
+                    CancellationToken cancellationToken) =>
             {
                 var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
@@ -188,11 +201,13 @@ namespace WebAPI.Endpoints
             })
                 .Produces(StatusCodes.Status200OK);
 
-            group.MapPut("deactivate", async (
-                BulkIdsRequest<string> ids,
-                HttpContext httpContext,
-                ISender sender,
-                CancellationToken cancellationToken) =>
+            group.MapPut("deactivate", 
+                [HasPermission(PermissionConstants.RolesStatusChange)] 
+                async (
+                    BulkIdsRequest<string> ids,
+                    HttpContext httpContext,
+                    ISender sender,
+                    CancellationToken cancellationToken) =>
             {
                 var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
@@ -226,11 +241,13 @@ namespace WebAPI.Endpoints
             })
                 .Produces(StatusCodes.Status200OK);
             
-            group.MapPut("delete", async (
-                BulkIdsRequest<string> ids,
-                HttpContext httpContext,
-                ISender sender,
-                CancellationToken cancellationToken) =>
+            group.MapPut("delete", 
+                [HasPermission(PermissionConstants.RolesDelete)] 
+                async (
+                    BulkIdsRequest<string> ids,
+                    HttpContext httpContext,
+                    ISender sender,
+                    CancellationToken cancellationToken) =>
             {
                 var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))

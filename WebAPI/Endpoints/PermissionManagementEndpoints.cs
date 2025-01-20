@@ -6,7 +6,9 @@ using Application.Permissions.Commands.Update;
 using Application.Permissions.Queries.GetAll;
 using Application.Shared.Pagination;
 using Application.Shared.Requesets;
+using Domain.Permissions;
 using Domain.Roles;
+using Infrastructure.Authentication;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -26,44 +28,45 @@ namespace WebAPI.Endpoints
         {
             var group = app
                 .MapGroup("permissions")
-                .RequireAuthorization(policy => policy.RequireRole(RoleConstants.Admin))
                 .WithTags("Permission Management");
 
-            group.MapPost("create", async (
-                CreatePermissionRequest request,
-                HttpContext httpContext,
-                ISender sender,
-                CancellationToken cancellationToken) =>
-            {
-                var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrEmpty(userId))
-                {
-                    return Results.Unauthorized();
-                }
-                var command = new CreatePermissionCommand(
-                    request.Name.Trim().ToLower(), 
-                    string.IsNullOrWhiteSpace(request.Description) 
-                        ? null
-                        : request.Description, 
-                    userId);
+            //group.MapPost("create", async (
+            //    CreatePermissionRequest request,
+            //    HttpContext httpContext,
+            //    ISender sender,
+            //    CancellationToken cancellationToken) =>
+            //{
+            //    var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            //    if (string.IsNullOrEmpty(userId))
+            //    {
+            //        return Results.Unauthorized();
+            //    }
+            //    var command = new CreatePermissionCommand(
+            //        request.Name.Trim().ToLower(), 
+            //        string.IsNullOrWhiteSpace(request.Description) 
+            //            ? null
+            //            : request.Description, 
+            //        userId);
 
-                var result = await sender.Send(command, cancellationToken);
+            //    var result = await sender.Send(command, cancellationToken);
 
-                return result.IsSuccess
-                    ? Results.Created(uri: $"/roles/{result.Value}",
-                    value: new
-                    {
-                        Message = "Permission created successfully."
-                    })
-                    : HandleFailure(result);
-            })
-                .Produces(StatusCodes.Status201Created);
+            //    return result.IsSuccess
+            //        ? Results.Created(uri: $"/roles/{result.Value}",
+            //        value: new
+            //        {
+            //            Message = "Permission created successfully."
+            //        })
+            //        : HandleFailure(result);
+            //})
+            //    .Produces(StatusCodes.Status201Created);
 
-            group.MapPut("update", async (
-                UpdatePermissionRequest request, 
-                HttpContext httpContext, 
-                ISender sender, 
-                CancellationToken cancellationToken) =>
+            group.MapPut("update", 
+                [HasPermission(PermissionConstants.PermissionsEdit)] 
+                async (
+                    UpdatePermissionRequest request, 
+                    HttpContext httpContext, 
+                    ISender sender, 
+                    CancellationToken cancellationToken) =>
             {
                 var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
@@ -90,14 +93,16 @@ namespace WebAPI.Endpoints
             })
                 .Produces(StatusCodes.Status200OK);
 
-            group.MapGet("", async (
-                string? searchTerm,
-                string? sortColumn,
-                string? sortOrder,
-                int page,
-                int pageSize,
-                ISender sender,
-                CancellationToken cancellationToken) =>
+            group.MapGet("", 
+                [HasPermission(PermissionConstants.PermissionsRead)] 
+                async (
+                    string? searchTerm,
+                    string? sortColumn,
+                    string? sortOrder,
+                    int page,
+                    int pageSize,
+                    ISender sender,
+                    CancellationToken cancellationToken) =>
             {
                 var query = new GetAllPermissionsQuery(
                     searchTerm,
@@ -112,122 +117,128 @@ namespace WebAPI.Endpoints
             })
                 .Produces(StatusCodes.Status200OK, typeof(PaginatedList<GetAllPermissionsResponse>));
 
-            group.MapPut("activate", async (
-                BulkIdsRequest<string> request,
-                HttpContext httpContext,
-                ISender sender,
-                CancellationToken cancellationToken) =>
-            {
-                var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrEmpty(userId))
-                {
-                    return Results.Unauthorized();
-                }
+            //group.MapPut("activate", 
+            //    [HasPermission(PermissionConstants.PermissionStatusChange)] 
+            //    async (
+            //        BulkIdsRequest<string> request,
+            //        HttpContext httpContext,
+            //        ISender sender,
+            //        CancellationToken cancellationToken) =>
+            //{
+            //    var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            //    if (string.IsNullOrEmpty(userId))
+            //    {
+            //        return Results.Unauthorized();
+            //    }
 
-                var command = new ActivatePermissionsCommand(request.Ids.ToList(), userId);
-                var result = await sender.Send(command, cancellationToken);
+            //    var command = new ActivatePermissionsCommand(request.Ids.ToList(), userId);
+            //    var result = await sender.Send(command, cancellationToken);
 
-                if (result.IsFailure)
-                {
-                    return HandleFailure(result);
-                }
+            //    if (result.IsFailure)
+            //    {
+            //        return HandleFailure(result);
+            //    }
 
-                var activatedIds = result.Value;
+            //    var activatedIds = result.Value;
 
-                if (activatedIds.Count == 1)
-                {
-                    return Results.Ok(
-                    new
-                    {
-                        Message = $"Permission with id, {activatedIds[0]} was activated."
-                    });
-                }
+            //    if (activatedIds.Count == 1)
+            //    {
+            //        return Results.Ok(
+            //        new
+            //        {
+            //            Message = $"Permission with id, {activatedIds[0]} was activated."
+            //        });
+            //    }
 
-                return Results.Ok(
-                    new
-                    {
-                        Message = $"Permissions with ids, {string.Join(", ", activatedIds)} were activated."
-                    });
-            })
-                .Produces(StatusCodes.Status200OK);
+            //    return Results.Ok(
+            //        new
+            //        {
+            //            Message = $"Permissions with ids, {string.Join(", ", activatedIds)} were activated."
+            //        });
+            //})
+            //    .Produces(StatusCodes.Status200OK);
 
-            group.MapPut("deactivate", async (
-                BulkIdsRequest<string> request,
-                HttpContext httpContext,
-                ISender sender,
-                CancellationToken cancellationToken) =>
-            {
-                var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrEmpty(userId))
-                {
-                    return Results.Unauthorized();
-                }
+            //group.MapPut("deactivate", 
+            //    [HasPermission(PermissionConstants.PermissionStatusChange)] 
+            //    async (
+            //        BulkIdsRequest<string> request,
+            //        HttpContext httpContext,
+            //        ISender sender,
+            //        CancellationToken cancellationToken) =>
+            //{
+            //    var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            //    if (string.IsNullOrEmpty(userId))
+            //    {
+            //        return Results.Unauthorized();
+            //    }
 
-                var command = new DeactivatePermissionsCommand(request.Ids.ToList(), userId);
-                var result = await sender.Send(command, cancellationToken);
+            //    var command = new DeactivatePermissionsCommand(request.Ids.ToList(), userId);
+            //    var result = await sender.Send(command, cancellationToken);
 
-                if (result.IsFailure)
-                {
-                    return HandleFailure(result);
-                }
+            //    if (result.IsFailure)
+            //    {
+            //        return HandleFailure(result);
+            //    }
 
-                var deactivatedIds = result.Value;
+            //    var deactivatedIds = result.Value;
 
-                if (deactivatedIds.Count == 1)
-                {
-                    return Results.Ok(
-                    new
-                    {
-                        Message = $"Permission with id, {deactivatedIds[0]} was deactivated."
-                    });
-                }
+            //    if (deactivatedIds.Count == 1)
+            //    {
+            //        return Results.Ok(
+            //        new
+            //        {
+            //            Message = $"Permission with id, {deactivatedIds[0]} was deactivated."
+            //        });
+            //    }
 
-                return Results.Ok(
-                    new
-                    {
-                        Message = $"Permissions with ids, {string.Join(", ", deactivatedIds)} were deactivated."
-                    });
-            })
-                .Produces(StatusCodes.Status200OK);
+            //    return Results.Ok(
+            //        new
+            //        {
+            //            Message = $"Permissions with ids, {string.Join(", ", deactivatedIds)} were deactivated."
+            //        });
+            //})
+            //    .Produces(StatusCodes.Status200OK);
 
-            group.MapPut("delete", async (
-                BulkIdsRequest<string> request,
-                HttpContext httpContext,
-                ISender sender,
-                CancellationToken cancellationToken) =>
-            {
-                var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrEmpty(userId))
-                {
-                    return Results.Unauthorized();
-                }
+            //group.MapPut("delete", 
+            //    [HasPermission(PermissionConstants.PermissionsDelete)] 
+            //    async (
+            //        BulkIdsRequest<string> request,
+            //        HttpContext httpContext,
+            //        ISender sender,
+            //        CancellationToken cancellationToken) =>
+            //{
+            //    var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            //    if (string.IsNullOrEmpty(userId))
+            //    {
+            //        return Results.Unauthorized();
+            //    }
 
-                var command = new DeletePermissionsCommand(request.Ids.ToList(), userId);
-                var result = await sender.Send(command, cancellationToken);
-                if (result.IsFailure)
-                {
-                    return HandleFailure(result);
-                }
+            //    var command = new DeletePermissionsCommand(request.Ids.ToList(), userId);
+            //    var result = await sender.Send(command, cancellationToken);
+            //    if (result.IsFailure)
+            //    {
+            //        return HandleFailure(result);
+            //    }
 
-                var deletedIds = result.Value;
+            //    var deletedIds = result.Value;
 
-                if (deletedIds.Count == 1)
-                {
-                    return Results.Ok(
-                    new
-                    {
-                        Message = $"Permission with id, {deletedIds[0]} was deleted."
-                    });
-                }
+            //    if (deletedIds.Count == 1)
+            //    {
+            //        return Results.Ok(
+            //        new
+            //        {
+            //            Message = $"Permission with id, {deletedIds[0]} was deleted."
+            //        });
+            //    }
 
-                return Results.Ok(
-                    new
-                    {
-                        Message = $"Permissions with ids, {string.Join(", ", deletedIds)} were deleted."
-                    });
+            //    return Results.Ok(
+            //        new
+            //        {
+            //            Message = $"Permissions with ids, {string.Join(", ", deletedIds)} were deleted."
+            //        });
 
-            })
-                .Produces(StatusCodes.Status200OK);
+            //})
+            //    .Produces(StatusCodes.Status200OK);
         }
 
         private static IResult HandleFailure(Result result) =>

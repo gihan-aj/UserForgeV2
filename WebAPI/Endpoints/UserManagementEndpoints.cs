@@ -27,19 +27,18 @@ namespace WebAPI.Endpoints
         {
             var group = app
                 .MapGroup("users")
-                .RequireAuthorization(policy => policy.RequireRole(RoleConstants.Admin))
                 .WithTags("User Management");
 
             group.MapGet("",
-                [HasPermission(PermissionConstants.UsersRead)] 
+                [HasPermission(PermissionConstants.UsersRead)]
                 async (
-                    string? searchTerm,
-                    string? sortColumn,
-                    string? sortOrder,
-                    int page,
-                    int pageSize,
-                    ISender sender,
-                    CancellationToken cancellationToken) =>
+                        string? searchTerm,
+                        string? sortColumn,
+                        string? sortOrder,
+                        int page,
+                        int pageSize,
+                        ISender sender,
+                        CancellationToken cancellationToken) =>
             {
                 var query = new GetAllUsersQuery(
                     searchTerm,
@@ -54,11 +53,13 @@ namespace WebAPI.Endpoints
             })
                 .Produces(StatusCodes.Status200OK, typeof(PaginatedList<GetAllUsersResponse>));
 
-            group.MapPut("activate", async (
-                BulkIdsRequest<string> request,
-                HttpContext httpContext,
-                ISender sender,
-                CancellationToken cancellationToken) =>
+            group.MapPut("activate",
+                [HasPermission(PermissionConstants.UsersStatusChange)]
+                async (
+                        BulkIdsRequest<string> request,
+                        HttpContext httpContext,
+                        ISender sender,
+                        CancellationToken cancellationToken) =>
             {
                 var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
@@ -75,7 +76,7 @@ namespace WebAPI.Endpoints
 
                 var activatedIds = result.Value;
 
-                if(activatedIds.Count == 1)
+                if (activatedIds.Count == 1)
                 {
                     return Results.Ok(
                     new
@@ -90,12 +91,14 @@ namespace WebAPI.Endpoints
                         Message = $"Users with ids, {string.Join(",", activatedIds)} were activated."
                     });
             });
-            
-            group.MapPut("deactivate", async (
-                BulkIdsRequest<string> request,
-                HttpContext httpContext,
-                ISender sender,
-                CancellationToken cancellationToken) =>
+
+            group.MapPut("deactivate",
+                [HasPermission(PermissionConstants.UsersStatusChange)]
+                async (
+                        BulkIdsRequest<string> request,
+                        HttpContext httpContext,
+                        ISender sender,
+                        CancellationToken cancellationToken) =>
             {
                 var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
@@ -128,11 +131,13 @@ namespace WebAPI.Endpoints
                     });
             });
 
-            group.MapPut("assign-roles", async (
-                AssignUserRolesRequest request,
-                HttpContext httpContext,
-                ISender sender,
-                CancellationToken cancellationToken) =>
+            group.MapPut("assign-roles", 
+                [HasPermission(PermissionConstants.UsersAssignRoles)] 
+                async (
+                    AssignUserRolesRequest request,
+                    HttpContext httpContext,
+                    ISender sender,
+                    CancellationToken cancellationToken) =>
             {
                 var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
@@ -146,7 +151,7 @@ namespace WebAPI.Endpoints
                     return HandleFailure(result);
                 }
                 var assignedRoleIds = result.Value;
-                if(assignedRoleIds.Count == 0)
+                if (assignedRoleIds.Count == 0)
                 {
                     return Results.Ok(
                     new
@@ -169,11 +174,13 @@ namespace WebAPI.Endpoints
                     });
             });
 
-            group.MapPut("delete", async (
-                BulkIdsRequest<string> request,
-                HttpContext httpContext,
-                ISender sender,
-                CancellationToken cancellationToken) =>
+            group.MapPut("delete", 
+                [HasPermission(PermissionConstants.UsersDelete)]
+                async (
+                    BulkIdsRequest<string> request,
+                    HttpContext httpContext,
+                    ISender sender,
+                    CancellationToken cancellationToken) =>
             {
                 var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
@@ -228,7 +235,7 @@ namespace WebAPI.Endpoints
                     "User Not Found",
                     StatusCodes.Status404NotFound,
                     result.Error)),
-                
+
                 { Error: { Code: "UsersNotFound" } } =>
                 Results.NotFound(ErrorHandler.CreateProblemDetails(
                     "Users Not Found",
