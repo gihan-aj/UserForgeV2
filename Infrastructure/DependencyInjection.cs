@@ -17,12 +17,12 @@ namespace Infrastructure
             var connection = configuration.GetConnectionString("DefaultConnection");
 
             // Add DbContext
-            services.AddDbContext<ApplicationDbContext>(options =>
+            services.AddDbContext<Persistence.ApplicationDbContext>(options =>
                 options.UseSqlServer(connection));
 
-            services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
+            services.AddScoped((System.Func<System.IServiceProvider, Application.Abstractions.Data.IApplicationDbContext>)(sp => sp.GetRequiredService<Persistence.ApplicationDbContext>()));
 
-            services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<ApplicationDbContext>());
+            services.AddScoped((System.Func<System.IServiceProvider, IUnitOfWork>)(sp => sp.GetRequiredService<Persistence.ApplicationDbContext>()));
 
             // Add Identity Configuration
             services.AddIdentityCore<User>(options =>
@@ -35,7 +35,7 @@ namespace Infrastructure
             })
                 .AddRoles<Role>()
                 .AddRoleManager<RoleManager<Role>>()
-                .AddEntityFrameworkStores<ApplicationDbContext>()
+                .AddEntityFrameworkStores<Persistence.ApplicationDbContext>()
                 .AddPasswordValidator<PasswordValidator<User>>()
                 .AddTokenProvider<EmailTokenProvider<User>>(TokenOptions.DefaultEmailProvider)
                 .AddTokenProvider<PasswordResetTokenProvider<User>>(TokenOptions.DefaultProvider);

@@ -27,7 +27,7 @@ namespace Infrastructure.Persistence
             IdentityUserLogin<string>,
             IdentityRoleClaim<string>,
             IdentityUserToken<string>>
-        , IApplicationDbContext
+        , Application.Abstractions.Data.IApplicationDbContext
         , IUnitOfWork
     {
         public DbSet<RefreshToken> RefreshTokens { get; set; }

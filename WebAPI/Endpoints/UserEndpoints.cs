@@ -12,6 +12,7 @@ using Application.Users.Commands.SendEmailChange;
 using Application.Users.Commands.SendPasswordReset;
 using Application.Users.Commands.Update;
 using Application.Users.Queries.GetUser;
+using Application.Users.Queries.GetUserPermissions;
 using Application.Users.Queries.GetUserSettings;
 using Domain.Users;
 using MediatR;
@@ -23,6 +24,7 @@ using System;
 using System.Security.Claims;
 using System.Threading;
 using WebAPI.Helpers;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace WebAPI.Endpoints
 {
@@ -348,17 +350,6 @@ namespace WebAPI.Endpoints
                 {
                     return Results.Unauthorized();
                 }
-
-                //var command = new UpdateUserSettingsCommand(
-                //    userId,
-                //    request.Theme,
-                //    request.Language,
-                //    request.DateFormat,
-                //    request.TimeFormat,
-                //    request.TimeZone,
-                //    request.NotificationsEnabled,
-                //    request.EmailNotification,
-                //    request.SmsNotification);
                 
                 var command = new SaveUserSettingsCommand(
                     request.Theme,
@@ -376,6 +367,30 @@ namespace WebAPI.Endpoints
                 return Results.NoContent();
             })
                 .Produces(StatusCodes.Status204NoContent)
+                .RequireAuthorization();
+
+            group.MapGet("permissions", async (
+                HttpContext httpContext,
+                ISender sender,
+                CancellationToken cancellationToken) =>
+            {
+                var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Results.Unauthorized();
+                }
+
+                var query = new GetUserPermissionsQuery(userId);
+                var result = await sender.Send(query, cancellationToken);
+                if (result.IsFailure)
+                {
+                    return HandleFailure(result);
+                }
+
+                return Results.Ok(result.Value);
+
+            })
+                .Produces(StatusCodes.Status200OK)
                 .RequireAuthorization();
 
             group.MapPut("logout", async (
@@ -482,6 +497,12 @@ namespace WebAPI.Endpoints
                 Results.BadRequest(ErrorHandler.CreateProblemDetails(
                     "Password Mismatch",
                     StatusCodes.Status400BadRequest,
+                    result.Error)),
+                
+                { Error: { Code: "MissingUserPermissions" } } =>
+                Results.Problem(ErrorHandler.CreateProblemDetails(
+                    "Missing User Permissions",
+                    StatusCodes.Status404NotFound,
                     result.Error)),
 
                 _ => Results.Problem(ErrorHandler.CreateProblemDetails(

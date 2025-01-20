@@ -9,6 +9,7 @@ namespace Domain.Permissions
             public static Error PermissionNotFound(string permissionId) => new("PermissionNotFound", $"Permission with id '{permissionId}' not found.");
             public static Error PermissionsNotFound => new("PermissionsNotFound", "Permissions with gievn ids not found.");
             public static Error MissingPermissions => new("MissingPermissions", "One or more permissions not found.");
+            public static Error MissingUserPermissions => new("MissingUserPermissions", "Permissions not found for the user.");
         }
 
         public static class  Confilct

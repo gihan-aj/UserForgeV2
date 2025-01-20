@@ -14,15 +14,16 @@ using System.Collections.Generic;
 using SharedKernal;
 using Microsoft.AspNetCore.Identity;
 using Domain.RolePermissions;
+using Domain.Users;
 
 namespace Infrastructure.Persistence.Repositories
 {
     public class PermissionsRepository : IPermissionsRepository
     {
-        private readonly IApplicationDbContext _context;
+        private readonly ApplicationDbContext _context;
         private readonly RoleManager<Role> _roleManager;
 
-        public PermissionsRepository(IApplicationDbContext context, RoleManager<Role> roleManager)
+        public PermissionsRepository(ApplicationDbContext context, RoleManager<Role> roleManager)
         {
             _context = context;
             _roleManager = roleManager;

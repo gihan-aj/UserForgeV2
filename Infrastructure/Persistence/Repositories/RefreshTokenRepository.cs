@@ -13,9 +13,9 @@ namespace Infrastructure.Persistence.Repositories
 {
     public class RefreshTokenRepository : IRefreshTokenRepository
     {
-        private readonly IApplicationDbContext _context;
+        private readonly Application.Abstractions.Data.IApplicationDbContext _context;
 
-        public RefreshTokenRepository(IApplicationDbContext context, IUnitOfWork unitOfWork)
+        public RefreshTokenRepository(Application.Abstractions.Data.IApplicationDbContext context, IUnitOfWork unitOfWork)
         {
             _context = context;
         }
