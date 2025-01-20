@@ -31,7 +31,7 @@ namespace WebAPI.Endpoints
         {
             var group = app
                 .MapGroup("roles")
-                .RequireAuthorization(policy => policy.RequireRole(Roles.Admin))
+                .RequireAuthorization(policy => policy.RequireRole(RoleConstants.Admin))
                 .WithTags("Role Management");
 
             group.MapPost("create", async (

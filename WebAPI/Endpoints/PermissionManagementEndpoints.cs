@@ -26,7 +26,7 @@ namespace WebAPI.Endpoints
         {
             var group = app
                 .MapGroup("permissions")
-                .RequireAuthorization(policy => policy.RequireRole(Roles.Admin))
+                .RequireAuthorization(policy => policy.RequireRole(RoleConstants.Admin))
                 .WithTags("Permission Management");
 
             group.MapPost("create", async (

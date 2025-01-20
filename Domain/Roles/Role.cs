@@ -11,9 +11,6 @@ namespace Domain.Roles
 {
     public class Role : IdentityRole<string>, IAuditable, ISoftDeletable
     {
-        public static readonly Role User = new("user", "Application user", "default");
-        public static readonly Role Admin = new("admin", "Application admin", "default");
-
         public Role(string name, string? description, string createdBy) : base(name)
         {
             Id = Guid.NewGuid().ToString(); // Explicitly initialize the Id

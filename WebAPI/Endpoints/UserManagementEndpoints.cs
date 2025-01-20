@@ -27,17 +27,19 @@ namespace WebAPI.Endpoints
         {
             var group = app
                 .MapGroup("users")
-                .RequireAuthorization(policy => policy.RequireRole(Roles.Admin))
+                .RequireAuthorization(policy => policy.RequireRole(RoleConstants.Admin))
                 .WithTags("User Management");
 
-            group.MapGet("",[HasPermission(DefaultPermissions.UserAccess)] async (
-                string? searchTerm,
-                string? sortColumn,
-                string? sortOrder,
-                int page,
-                int pageSize,
-                ISender sender,
-                CancellationToken cancellationToken) =>
+            group.MapGet("",
+                [HasPermission(PermissionConstants.UsersRead)] 
+                async (
+                    string? searchTerm,
+                    string? sortColumn,
+                    string? sortOrder,
+                    int page,
+                    int pageSize,
+                    ISender sender,
+                    CancellationToken cancellationToken) =>
             {
                 var query = new GetAllUsersQuery(
                     searchTerm,

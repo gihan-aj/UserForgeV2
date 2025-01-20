@@ -3,6 +3,7 @@ using Application.Shared.Pagination;
 using Application.UserManagement.Queries.GetAll;
 using Application.Users.Queries.GetUser;
 using Domain.Users;
+using Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SharedKernal;
@@ -204,6 +205,7 @@ namespace Infrastructure.Services
                 foreach (var user in users)
                 {
                     user.DeletedBy = deletedBy;
+
                     var deleteResult = await _userManager.DeleteAsync(user);
                     if (!deleteResult.Succeeded)
                     {
