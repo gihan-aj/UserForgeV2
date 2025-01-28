@@ -30,25 +30,24 @@ namespace Application.Users.Commands.SaveUserSettings
 
             var user = userResult.Value;
 
-            var settingsToUpdate = new[]
-            {
-                new UserSetting { Key = "Theme", Value = request.Theme, DataType = "string" }, 
-                new UserSetting { Key = "PageSize", Value = request.PageSize.ToString() , DataType = "int"}, 
-                new UserSetting { Key = "DateFormat", Value = request.DateFormat, DataType = "string" }, 
-                new UserSetting { Key = "TimeFormat", Value = request.TimeFormat, DataType = "string" }
-            };
-
-            foreach ( var setting in settingsToUpdate )
+            foreach ( var setting in request.UserSettings)
             {
                 var existingSetting = user.UserSettings.FirstOrDefault(us => us.Key == setting.Key);
                 if( existingSetting is not null )
                 {
                     existingSetting.Value = setting.Value;
+                    existingSetting.DataType = setting.DataType;
                 }
                 else
                 {
-                    setting.UserId = request.UserId;
-                    user.UserSettings.Add(setting);
+                    var newSetting = new UserSetting
+                    {
+                        Key = setting.Key,
+                        Value = setting.Value,
+                        DataType = setting.DataType,
+                        UserId = request.UserId
+                    };
+                    user.UserSettings.Add(newSetting);
                 }
             }
 

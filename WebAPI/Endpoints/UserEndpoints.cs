@@ -340,7 +340,7 @@ namespace WebAPI.Endpoints
                 .RequireAuthorization();
 
             group.MapPut("update-user-settings", async (
-                SaveUserSettingsRequest request,
+                SaveUserSettingsRequest[] request,
                 HttpContext httpContext,
                 ISender sender,
                 CancellationToken cancellationToken) =>
@@ -352,10 +352,7 @@ namespace WebAPI.Endpoints
                 }
                 
                 var command = new SaveUserSettingsCommand(
-                    request.Theme,
-                    request.PageSize,
-                    request.DateFormat,
-                    request.TimeFormat,
+                    request,
                     userId);
 
                 var result = await sender.Send(command, cancellationToken);

@@ -17,29 +17,23 @@ namespace Application.Users.Commands.Refresh
     internal sealed class RefreshUserCommandHandler : ICommandHandler<RefreshUserCommand, RefreshUserResponse>
     {
         private readonly IRefreshTokenRepository _refreshRepository;
-        private readonly IUserService _userService;
         private readonly ITokenService _tokenService;
         private readonly TokenSettings _tokenSettings;
         private readonly IRefreshTokenRepository _refreshTokenRepository;
-        private readonly IUserSettingsRepository _userSettingsRepository;
         private readonly IUnitOfWork _unitOfWork;
 
         public RefreshUserCommandHandler(
             IRefreshTokenRepository refreshRepository,
-            IUserService userService,
             ITokenService tokenService,
             IOptions<TokenSettings> tokenSettings,
             IRefreshTokenRepository refreshTokenRepository,
-            IUnitOfWork unitOfWork,
-            IUserSettingsRepository userSettingsRepository)
+            IUnitOfWork unitOfWork)
         {
             _refreshRepository = refreshRepository;
-            _userService = userService;
             _tokenService = tokenService;
             _tokenSettings = tokenSettings.Value;
             _refreshTokenRepository = refreshTokenRepository;
             _unitOfWork = unitOfWork;
-            _userSettingsRepository = userSettingsRepository;
         }
         public async Task<Result<RefreshUserResponse>> Handle(RefreshUserCommand request, CancellationToken cancellationToken)
         {
@@ -56,19 +50,12 @@ namespace Application.Users.Commands.Refresh
                 return Result.Failure<RefreshUserResponse>(UserErrors.Token.InvalidRefreshToken);
             }
 
-            //var userResult = await _userService.GetByIdAsync(existingToken.UserId);
-            //if (userResult.IsFailure)
-            //{
-            //    return Result.Failure<RefreshUserResponse>(userResult.Error);
-            //}
-
             var user = existingToken.User;
             if(user is null)
             {
                 return Result.Failure<RefreshUserResponse>(UserErrors.Token.InvalidRefreshToken);
             }
 
-            //var rolesResult = await _userService.GetRolesAsync(user);
             var roles = user.UserRoles
                 .Select(ur => ur.Role)
                 .Select(r => r.Name)
@@ -89,17 +76,6 @@ namespace Application.Users.Commands.Refresh
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             var refreshUserResponse = new RefreshUserResponse(user, accessToken, refreshToken);
-
-            //var settings = await _userSettingsRepository.GetByUserIdAsync(user.Id);
-            //if (settings is not null)
-            //{
-            //    refreshUserResponse.UserSettings = new BasicUserSettings(
-            //        settings.Theme,
-            //        settings.Language,
-            //        settings.DateFormat,
-            //        settings.TimeFormat,
-            //        settings.TimeZone);
-            //}
 
             return Result.Success(refreshUserResponse);
         }

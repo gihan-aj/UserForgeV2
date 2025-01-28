@@ -13,7 +13,7 @@ namespace Application.Abstractions.Repositories
 
         void Add(string refreshToken, DateTime expiryDate, User user, string deviceInfo);
 
-        Task<RefreshToken?> GetAsync(string refreshToken, string deviceInfo);
+        Task<RefreshToken?> GetAsync(string refreshToken, string hashedDeviceInfo);
 
         Task<RefreshToken?> GetByUserIdAndDeviceAsync(string userId, string deviceInfo);
 

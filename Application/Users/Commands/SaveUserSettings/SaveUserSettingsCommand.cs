@@ -3,9 +3,6 @@
 namespace Application.Users.Commands.SaveUserSettings
 {
     public record SaveUserSettingsCommand(
-        string Theme,
-        int PageSize,
-        string DateFormat,
-        string TimeFormat,
+        SaveUserSettingsRequest[] UserSettings,
         string UserId) : ICommand;
 }

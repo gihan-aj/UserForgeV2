@@ -1,5 +1,4 @@
 ﻿using Domain.Users;
-using Domain.UserSettings;
 using System.Linq;
 
 namespace Application.Users.Commands.Login
@@ -13,9 +12,13 @@ namespace Application.Users.Commands.Login
                 .Select(ur => ur.Role)
                 .Select(r => r.Name)
                 .ToArray();
-            UserSettings = user.UserSettings.ToArray();
+ 
             AccessToken = accessToken;
             RefreshToken = refreshToken;
+
+            UserSettings = user.UserSettings
+                .Select(us => new UserSettingResponse(us.Key, us.Value, us.DataType))
+                .ToArray();
         }
 
         public string? AccessToken { get; private set; } = null;
@@ -26,6 +29,6 @@ namespace Application.Users.Commands.Login
 
         public string?[] Roles { get; private set; }
 
-        public UserSetting[]? UserSettings { get; set; } = null;
+        public UserSettingResponse[]? UserSettings { get; set; } = null;
     }
 }

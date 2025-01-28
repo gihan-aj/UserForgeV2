@@ -36,14 +36,16 @@ namespace Infrastructure.Persistence.Repositories
             _context.RefreshTokens.Add(refreshTokenData);
         }
 
-        public Task<RefreshToken?> GetAsync(string refreshToken, string deviceInfo)
+        public Task<RefreshToken?> GetAsync(string refreshToken, string hashedDeviceInfo)
         {
             return _context.RefreshTokens
                 .Include(rt => rt.User)
-                .ThenInclude(u => u.UserRoles)
-                .ThenInclude(ur => ur.Role)
+                    .ThenInclude(u => u.UserRoles)
+                        .ThenInclude(ur => ur.Role)
+                .Include(rt => rt.User)
+                    .ThenInclude(u => u.UserSettings)
                 .FirstOrDefaultAsync(rt =>
-                    rt.Token == refreshToken && rt.DeviceIdentifierHash == deviceInfo);
+                    rt.Token == refreshToken && rt.DeviceIdentifierHash == hashedDeviceInfo);
         }
         
         public Task<RefreshToken?> GetByUserIdAndDeviceAsync(string userId, string deviceIdentifierHash)
