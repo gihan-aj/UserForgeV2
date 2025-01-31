@@ -45,12 +45,20 @@ namespace Infrastructure.Persistence
                     RoleConstants.Admin,
                     new[]
                     {
+                        PermissionConstants.HomeAccess,
+
+                        PermissionConstants.DashboardAccess,
+
+                        PermissionConstants.UsersAccess,
                         PermissionConstants.UsersCreate,
                         PermissionConstants.UsersRead,
                         PermissionConstants.UsersEdit,
                         PermissionConstants.UsersDelete,
                         PermissionConstants.UsersStatusChange,
+                        PermissionConstants.UsersReadRoles,
                         PermissionConstants.UsersAssignRoles,
+
+                        PermissionConstants.RolesAccess,
                         PermissionConstants.RolesCreate,
                         PermissionConstants.RolesRead,
                         PermissionConstants.RolesEdit,
@@ -58,35 +66,69 @@ namespace Infrastructure.Persistence
                         PermissionConstants.RolesDelete,
                         PermissionConstants.RolesReadPermissions,
                         PermissionConstants.RolesManagePermissions,
-                        PermissionConstants.PermissionsCreate,
+
+                        PermissionConstants.AppsAccess,
+                        PermissionConstants.AppsRead,
+                        PermissionConstants.AppsCreate,
+                        PermissionConstants.AppsEdit,
+                        PermissionConstants.AppsStatusChange,
+                        PermissionConstants.AppsDelete,
+
                         PermissionConstants.PermissionsRead,
                         PermissionConstants.PermissionsEdit,
-                        PermissionConstants.PermissionStatusChange,
-                        PermissionConstants.PermissionsDelete,
-                        PermissionConstants.AuditLogsView,
+
+                        PermissionConstants.AppPortalAccess,
+
+                        PermissionConstants.AuditLogsAccess,
                         PermissionConstants.AuditLogsExport,
+
                         PermissionConstants.SettingsManage,
-                        PermissionConstants.DashboardAccess
                     }
                 },
                 {
                     RoleConstants.Manager,
                     new[]
                     {
+                        PermissionConstants.HomeAccess,
+
+                        PermissionConstants.DashboardAccess,
+
+                        PermissionConstants.UsersAccess,
                         PermissionConstants.UsersRead,
-                        PermissionConstants.UsersEdit,
                         PermissionConstants.UsersStatusChange,
+                        PermissionConstants.UsersReadRoles,
                         PermissionConstants.UsersAssignRoles,
+
+                        PermissionConstants.RolesAccess,
+                        PermissionConstants.RolesCreate,
                         PermissionConstants.RolesRead,
-                        PermissionConstants.DashboardAccess
+                        PermissionConstants.RolesEdit,
+                        PermissionConstants.RolesStatusChange,
+                        PermissionConstants.RolesReadPermissions,
+                        PermissionConstants.RolesManagePermissions,
+
+                        PermissionConstants.AppsAccess,
+                        PermissionConstants.AppsRead,
+
+                        PermissionConstants.PermissionsRead,
+
+                        PermissionConstants.AppPortalAccess,
+
+                        PermissionConstants.AuditLogsAccess,
+                        PermissionConstants.AuditLogsExport,
+
+                        PermissionConstants.SettingsManage,
                     }
                 },
                 {
                     RoleConstants.User,
                     new[]
                     {
+                        PermissionConstants.HomeAccess,
+
                         PermissionConstants.DashboardAccess,
-                        PermissionConstants.UsersRead
+
+                        PermissionConstants.AppPortalAccess,
                     }
                 }
             };
@@ -115,21 +157,35 @@ namespace Infrastructure.Persistence
 
                 if(dbRole is not null)
                 {
-                    if(dbRole.RolePermissions.Count() == 0)
+                    var permissionsToAdd = new List<Permission>();
+                    foreach (string permissionName in allRolePermissions[dbRole.Name!])
                     {
-                        var permissionsToAdd = new List<Permission>();
-                        foreach (string permissionName in allRolePermissions[dbRole.Name!])
+                        Permission? permission = await context.Permissions.FirstOrDefaultAsync(p => p.Name == permissionName);
+                        if (permission is not null)
                         {
-                            Permission? permission = await context.Permissions.FirstOrDefaultAsync(p => p.Name == permissionName);
-                            if (permission is not null)
+                            if(!dbRole.RolePermissions.Any(rp => rp.PermissionId == permission.Id))
                             {
                                 permissionsToAdd.Add(permission);
                             }
                         }
-
-                        dbRole.AddRolePermissionsRange(permissionsToAdd, createdBy);
                     }
-                    
+
+                    if(permissionsToAdd.Count() > 0)
+                    {
+                        foreach (var rolePermission in dbRole.RolePermissions)
+                        {
+                            context.RolePermissions.Remove(rolePermission);
+                        }
+
+                        foreach(var permission in permissionsToAdd)
+                        {
+                            context.RolePermissions.Add(new Domain.RolePermissions.RolePermission
+                            {
+                                RoleId = dbRole.Id,
+                                PermissionId = permission.Id
+                            });
+                        }
+                    }
                 }
             }
 

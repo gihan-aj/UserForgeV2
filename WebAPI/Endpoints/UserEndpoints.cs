@@ -176,7 +176,7 @@ namespace WebAPI.Endpoints
                 return Results.NoContent();
             })
                 .Produces(StatusCodes.Status204NoContent)
-                .RequireAuthorization();
+                .AllowAnonymous();
 
             group.MapPut("reset-password", async (
                 Application.Users.Commands.ResetPassword.ResetPasswordRequest request,
@@ -195,7 +195,9 @@ namespace WebAPI.Endpoints
                 }
 
                 return Results.NoContent();
-            });
+            })
+                .Produces(StatusCodes.Status204NoContent)
+                .AllowAnonymous();
 
             group.MapPut("change-password", async (
                 ChangePasswordRequest request,

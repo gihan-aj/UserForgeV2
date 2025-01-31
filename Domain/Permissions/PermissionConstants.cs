@@ -29,33 +29,45 @@ namespace Domain.Permissions
         //    }
         //}
 
-        public const string UsersCreate = "users.create";         // Create a new user
-        public const string UsersRead = "users.read";             // View user details
-        public const string UsersEdit = "users.edit";             // Edit user details
-        public const string UsersDelete = "users.delete";         // Delete a user
-        public const string UsersStatusChange = "users.status";   // Activate/Deactivate user
-        public const string UsersAssignRoles = "users.assign.roles"; // Assign roles to users
+        public const string HomeAccess = "home.access";
 
-        public const string RolesCreate = "roles.create";         // Create a new role
-        public const string RolesRead = "roles.read";             // View role details
-        public const string RolesEdit = "roles.edit";             // Edit a role
-        public const string RolesStatusChange = "roles.status";   // activate/deactivate role
-        public const string RolesDelete = "roles.delete";         // Delete a role
-        public const string RolesReadPermissions = "roles.read.permissions"; // Manage permissions for roles
-        public const string RolesManagePermissions = "roles.manage.permissions"; // Manage permissions for roles
+        public const string DashboardAccess = "dashboard.access";
 
-        public const string PermissionsCreate = "permissions.create"; // Create a new permission
-        public const string PermissionsRead = "permissions.read";     // View permissions
-        public const string PermissionsEdit = "permissions.edit";     // Edit a permission
-        public const string PermissionStatusChange = "permission.status";
-        public const string PermissionsDelete = "permissions.delete"; // Delete a permission
+        public const string UsersAccess = "users.access";               // Acccess to user management
+        public const string UsersCreate = "users.create";               // Create a new user
+        public const string UsersRead = "users.read";                   // View user details
+        public const string UsersEdit = "users.edit";                   // Edit user details
+        public const string UsersDelete = "users.delete";               // Delete a user
+        public const string UsersStatusChange = "users.status";         // Activate/Deactivate user
+        public const string UsersReadRoles = "users.read.roles";        // View user roles
+        public const string UsersAssignRoles = "users.manage.roles";    // Assign roles to users
 
-        public const string AuditLogsView = "audit.view";       // View audit logs
+        public const string RolesAccess = "roles.access";                           // Access to role management
+        public const string RolesCreate = "roles.create";                           // Create a new role
+        public const string RolesRead = "roles.read";                               // View role details
+        public const string RolesEdit = "roles.edit";                               // Edit a role
+        public const string RolesStatusChange = "roles.status";                     // activate/deactivate role
+        public const string RolesDelete = "roles.delete";                           // Delete a role
+        public const string RolesReadPermissions = "roles.read.permissions";        // Manage permissions for roles
+        public const string RolesManagePermissions = "roles.manage.permissions";    // Manage permissions for roles
+
+        public const string AppsAccess = "apps.access";         // Access to apps management
+        public const string AppsCreate = "apps.create";         // Create a new app
+        public const string AppsRead = "apps.read";             // View app details
+        public const string AppsEdit = "apps.edit";             // Edit app details
+        public const string AppsStatusChange = "apps.status";   // Activate, deactivate apps
+        public const string AppsDelete = "apps.delete";         // Delete apps
+
+        public const string PermissionsRead = "permissions.read";           // View permissions
+        public const string PermissionsEdit = "permissions.edit";           // Edit a permission
+
+        public const string AppPortalAccess = "app-portal.access";
+
+        public const string AuditLogsAccess = "audit.access";   // View audit logs
         public const string AuditLogsExport = "audit.export";   // Export audit logs
 
         public const string SettingsManage = "settings.manage"; // Manage application settings
 
-        public const string DashboardAccess = "dashboard.access";
 
     }
 }
