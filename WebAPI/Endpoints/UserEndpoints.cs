@@ -338,7 +338,7 @@ namespace WebAPI.Endpoints
 
                 return Results.Ok(result.Value);
             })
-                .Produces(StatusCodes.Status200OK)
+                .Produces(StatusCodes.Status200OK, typeof(GetUserSettingsResponse))
                 .RequireAuthorization();
 
             group.MapPut("update-user-settings", async (
@@ -465,6 +465,12 @@ namespace WebAPI.Endpoints
                 { Error: { Code: "EmailNotConfirmed" } } =>
                 Results.Problem(ErrorHandler.CreateProblemDetails(
                     "Email Not Confirmed",
+                    StatusCodes.Status400BadRequest,
+                    result.Error)),
+
+                { Error: { Code: "AccountDeactivated" } } =>
+                Results.BadRequest(ErrorHandler.CreateProblemDetails(
+                    "Account Deactivated",
                     StatusCodes.Status400BadRequest,
                     result.Error)),
 
