@@ -154,6 +154,17 @@ namespace Infrastructure.Services
             }
         }
 
+        public async Task<Result<string[]>> GetUserRolesAsync(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user is null)
+            {
+                return Result.Failure<string[]>(UserErrors.NotFound.User(userId));
+            }
+            IList<string> roles = await _userManager.GetRolesAsync(user);
+            return roles.ToArray();
+        }
+
         public async Task<Result<List<string>>> AssignUserRolesAsync(string userId, List<string> roleNames, string modifiedBy, CancellationToken cancellationToken)
         {
             var user = await _userManager.FindByIdAsync(userId);

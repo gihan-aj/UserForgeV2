@@ -108,6 +108,16 @@ namespace Infrastructure.Services
             return roles;
         }
 
+        public async Task<string[]> GetRoleNamesAsync(CancellationToken cancellationToken)
+        {
+            string[] roleNames = await _roleManager.Roles
+                .Where(r => r.IsActive == true)
+                .Select(rn => rn.Name!)
+                .ToArrayAsync(cancellationToken);
+
+            return roleNames;
+        }
+
         public async Task<Role?> GetRoleById(string id)
         {
             return await _roleManager.FindByIdAsync(id);

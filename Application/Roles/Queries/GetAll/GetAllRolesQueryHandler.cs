@@ -2,10 +2,8 @@
 using Application.Abstractions.Services;
 using Application.Shared.Pagination;
 using SharedKernal;
-using System;
 using System.Threading;
 using System.Threading.Tasks;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Application.Roles.Queries.GetAll
 {

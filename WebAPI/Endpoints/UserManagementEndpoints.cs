@@ -5,6 +5,7 @@ using Application.UserManagement.Commands.AssignRoles;
 using Application.UserManagement.Commands.Deactivate;
 using Application.UserManagement.Commands.Delete;
 using Application.UserManagement.Queries.GetAll;
+using Application.UserManagement.Queries.GetUserRoles;
 using Domain.Permissions;
 using Domain.Roles;
 using Infrastructure.Authentication;
@@ -130,6 +131,23 @@ namespace WebAPI.Endpoints
                         Message = $"Users with ids, {string.Join(",", deactivatedIds)} were deactivated."
                     });
             });
+
+            group.MapGet("user-roles",
+                [HasPermission(PermissionConstants.UsersReadRoles)]
+                async (
+                    string UserId,
+                    ISender sender,
+                    CancellationToken cancellationToken) =>
+            {
+                var result = await sender.Send(new GetUserRolesQuery(UserId), cancellationToken);
+                if (result.IsFailure)
+                {
+                    return HandleFailure(result);
+                }
+
+                return Results.Ok(result.Value);
+            })
+                .Produces(StatusCodes.Status200OK, typeof(string[]));
 
             group.MapPut("assign-roles", 
                 [HasPermission(PermissionConstants.UsersAssignRoles)] 

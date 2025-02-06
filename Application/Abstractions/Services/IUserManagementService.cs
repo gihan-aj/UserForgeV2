@@ -21,6 +21,8 @@ namespace Application.Abstractions.Services
 
         Task<Result<List<string>>> DeactivateUsersAsync(List<string> ids, string modifiedBy, CancellationToken cancellationToken);
 
+        Task<Result<string[]>> GetUserRolesAsync(string userId);
+
         Task<Result<List<string>>> AssignUserRolesAsync(
             string userId,
             List<string> roleIds,

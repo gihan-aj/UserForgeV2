@@ -22,6 +22,8 @@ namespace Application.Abstractions.Services
             int pageSize,
             CancellationToken cancellationToken);
 
+        Task<string[]> GetRoleNamesAsync(CancellationToken cancellationToken);
+
         Task<Role?> GetRoleById(string id);
 
         Task<Role?> GetRoleWithRolePermissionsAsync(string id);

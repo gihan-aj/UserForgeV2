@@ -5,7 +5,9 @@ using Application.Roles.Commands.Deactivate;
 using Application.Roles.Commands.Delete;
 using Application.Roles.Commands.Update;
 using Application.Roles.Queries.GetAll;
+using Application.Roles.Queries.GetRoleNames;
 using Application.Roles.Queries.GetRolePermissions;
+using Application.Shared.Pagination;
 using Application.Shared.Requesets;
 using Application.UserManagement.Commands.AssignRoles;
 using Domain.Permissions;
@@ -116,7 +118,19 @@ namespace WebAPI.Endpoints
 
                 return Results.Ok(result.Value);
             })
-                .Produces(StatusCodes.Status200OK);
+                .Produces(StatusCodes.Status200OK, typeof(PaginatedList<GetAllRolesResponse>));
+
+            group.MapGet("role-names",
+                [HasPermission(PermissionConstants.RolesRead)]
+                async (
+                    ISender sender,
+                    CancellationToken cancellationToken) =>
+            {
+                var result = await sender.Send(new GetRoleNamesQuery(), cancellationToken);
+
+                return Results.Ok(result.Value);
+            })
+                .Produces(StatusCodes.Status200OK, typeof(string[]));
 
             group.MapPut("permissions", 
                 [HasPermission(PermissionConstants.RolesManagePermissions)] 
