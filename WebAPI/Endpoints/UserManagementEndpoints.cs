@@ -2,6 +2,7 @@
 using Application.Shared.Requesets;
 using Application.UserManagement.Commands.Activate;
 using Application.UserManagement.Commands.AssignRoles;
+using Application.UserManagement.Commands.BulkAssignRoles;
 using Application.UserManagement.Commands.Deactivate;
 using Application.UserManagement.Commands.Delete;
 using Application.UserManagement.Queries.GetAll;
@@ -190,6 +191,29 @@ namespace WebAPI.Endpoints
                     {
                         Message = $"Roles, {string.Join(",", assignedRoleIds)} were assigned to user."
                     });
+            });
+
+            group.MapPut("bulk-assign-roles",
+                [HasPermission(PermissionConstants.UsersAssignRoles)]
+                    async (BulkAssignRolesRequest request,
+                    HttpContext httpContext,
+                    ISender sender,
+                    CancellationToken cancellationToken) =>
+            {
+                var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Results.Unauthorized();
+                }
+
+                var command = new BulkAssignRolesCommand(request.UserIds, request.RoleNames, userId);
+                var result = await sender.Send(command, cancellationToken);
+                if (result.IsFailure)
+                {
+                    return HandleFailure(result);
+                }
+
+                return Results.NoContent();
             });
 
             group.MapPut("delete", 
