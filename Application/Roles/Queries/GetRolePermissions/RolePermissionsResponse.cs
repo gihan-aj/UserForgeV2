@@ -1,12 +1,12 @@
-﻿using Application.Permissions.Queries.GetAll;
+﻿using Domain.Permissions;
 using System.Collections.Generic;
 
 namespace Application.Roles.Queries.GetRolePermissions
 {
-    public record GetRolePermissionsResponse(
+    public record RolePermissionsResponse(
         string Id,
         string Name,
         string? Description,
         bool IsActive,
-        List<GetAllPermissionsResponse> Permissions);
+        List<RolePermissionResponse> Permissions);
 }

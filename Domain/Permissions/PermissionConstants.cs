@@ -58,8 +58,10 @@ namespace Domain.Permissions
         public const string AppsStatusChange = "apps.status";   // Activate, deactivate apps
         public const string AppsDelete = "apps.delete";         // Delete apps
 
+        public const string PermissionsAccess = "permissions.access";       // Access permissions
         public const string PermissionsRead = "permissions.read";           // View permissions
         public const string PermissionsEdit = "permissions.edit";           // Edit a permission
+        public const string PermissionsStatusChange = "permissions.status"; // Activate/deactivate a permission
 
         public const string AppPortalAccess = "app-portal.access";
 
@@ -67,7 +69,6 @@ namespace Domain.Permissions
         public const string AuditLogsExport = "audit.export";   // Export audit logs
 
         public const string SettingsManage = "settings.manage"; // Manage application settings
-
 
     }
 }

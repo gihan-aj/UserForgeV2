@@ -83,8 +83,7 @@ namespace Domain.Roles
                     RoleId = Id
                 });
 
-                LastModifiedBy = modifiedBy;
-                LastModifiedOn = DateTime.UtcNow;
+                user.UserRolesChanged(modifiedBy);
             }
         }
 
@@ -99,6 +98,11 @@ namespace Domain.Roles
                 });
             }
 
+            PermissionChanged(modifiedBy);
+        }
+
+        public void PermissionChanged(string modifiedBy)
+        {
             PermissionModifiedBy = modifiedBy;
             PermissionModifiedOn = DateTime.UtcNow;
         }

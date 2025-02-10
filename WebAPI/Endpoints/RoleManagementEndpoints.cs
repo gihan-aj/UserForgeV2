@@ -173,7 +173,7 @@ namespace WebAPI.Endpoints
 
                 return Results.Ok(result.Value);
             })
-                .Produces(StatusCodes.Status200OK, typeof(GetRolePermissionsResponse));
+                .Produces(StatusCodes.Status200OK, typeof(RolePermissionsResponse));
 
             group.MapPut("activate", 
                 [HasPermission(PermissionConstants.RolesStatusChange)] 

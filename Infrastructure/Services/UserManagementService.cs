@@ -1,9 +1,7 @@
 ﻿using Application.Abstractions.Services;
 using Application.Shared.Pagination;
 using Application.UserManagement.Queries.GetAll;
-using Application.Users.Queries.GetUser;
 using Domain.Users;
-using Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SharedKernal;
@@ -84,36 +82,43 @@ namespace Infrastructure.Services
                 .Where(u => ids.Contains(u.Id))
                 .ToListAsync(cancellationToken);
 
-            var activatedUsers = new List<string>();
-
             if (users.Count == 0)
             {
-                if (ids.Count == 1)
-                {
-                    return Result.Failure<List<string>>(UserErrors.NotFound.User(ids[0]));
-                }
-
-                return Result.Failure<List<string>>(UserErrors.NotFound.Users);
+                return ids.Count == 1
+                    ? Result.Failure<List<string>>(UserErrors.NotFound.User(ids[0]))
+                    : Result.Failure<List<string>>(UserErrors.NotFound.Users);
             }
-            else
+
+            var activatedUsers = new List<string>();
+
+            foreach (var user in users)
             {
-                foreach (var user in users)
+                if (IsUserProtected(user))
                 {
-                    if (!user.IsActive)
-                    {
-                        user.Activate(modifiedBy);
-                        var updateResult = await _userManager.UpdateAsync(user);
-                        if (!updateResult.Succeeded)
-                        {
-                            return CreateIdentityError<List<string>>(updateResult.Errors);
-                        }
-
-                        activatedUsers.Add(user.Id);
-                    }
+                    return Result.Failure<List<string>>(UserErrors.Authorization.ProtectedUser(user.Email!));
                 }
 
-                return activatedUsers;
+                if (!user.IsActive)
+                {
+                    user.Activate(modifiedBy);
+                    var updateResult = await _userManager.UpdateAsync(user);
+                    if (!updateResult.Succeeded)
+                    {
+                        return CreateIdentityError<List<string>>(updateResult.Errors);
+                    }
+
+                    activatedUsers.Add(user.Email!);
+                }
             }
+
+            if (activatedUsers.Count == 0)
+            {
+                return ids.Count == 1
+                    ? Result.Failure<List<string>>(UserErrors.General.OperationFailed("The user is already activated."))
+                    : Result.Failure<List<string>>(UserErrors.General.OperationFailed("Users are already activated."));
+            }
+
+            return activatedUsers;
         }
         
         public async Task<Result<List<string>>> DeactivateUsersAsync(List<string> ids, string modifiedBy, CancellationToken cancellationToken)
@@ -122,36 +127,43 @@ namespace Infrastructure.Services
                 .Where(u => ids.Contains(u.Id))
                 .ToListAsync(cancellationToken);
 
-            var deactivatedUsers = new List<string>();
-
             if (users.Count == 0)
             {
-                if(ids.Count == 1)
-                {
-                    return Result.Failure<List<string>>(UserErrors.NotFound.User(ids[0]));
-                }
-
-                return Result.Failure<List<string>>(UserErrors.NotFound.Users);
+                return ids.Count == 1
+                    ? Result.Failure<List<string>>(UserErrors.NotFound.User(ids[0]))
+                    : Result.Failure<List<string>>(UserErrors.NotFound.Users);
             }
-            else
+
+            var deactivatedUsers = new List<string>();
+
+            foreach (var user in users)
             {
-                foreach (var user in users)
+                if (IsUserProtected(user))
                 {
-                    if (user.IsActive)
-                    {
-                        user.Deactivate(modifiedBy);
-                        var updateResult = await _userManager.UpdateAsync(user);
-                        if (!updateResult.Succeeded)
-                        {
-                            return CreateIdentityError<List<string>>(updateResult.Errors);
-                        }
-
-                        deactivatedUsers.Add(user.Id);
-                    }
+                    return Result.Failure<List<string>>(UserErrors.Authorization.ProtectedUser(user.Email!));
                 }
 
-                return deactivatedUsers;
+                if (user.IsActive)
+                {
+                    user.Deactivate(modifiedBy);
+                    var updateResult = await _userManager.UpdateAsync(user);
+                    if (!updateResult.Succeeded)
+                    {
+                        return CreateIdentityError<List<string>>(updateResult.Errors);
+                    }
+
+                    deactivatedUsers.Add(user.Email!);
+                }            
             }
+
+            if (deactivatedUsers.Count == 0)
+            {
+                return ids.Count == 1
+                    ? Result.Failure<List<string>>(UserErrors.General.OperationFailed("The user is already deactivated."))
+                    : Result.Failure<List<string>>(UserErrors.General.OperationFailed("Users are already deactivated."));
+            }
+
+            return deactivatedUsers;
         }
 
         public async Task<Result<string[]>> GetUserRolesAsync(string userId)
@@ -172,9 +184,16 @@ namespace Infrastructure.Services
             {
                 return Result.Failure<List<string>>(UserErrors.NotFound.User(userId));
             }
+
+            if (IsUserProtected(user))
+            {
+                return Result.Failure<List<string>>(UserErrors.Authorization.ProtectedUser(user.Email!));
+            }
+
             var roles = await _userManager.GetRolesAsync(user);
             var rolesToAdd = roleNames.Except(roles).ToList();
             var rolesToRemove = roles.Except(roleNames).ToList();
+
             var addResult = await _userManager.AddToRolesAsync(user, rolesToAdd);
             if (!addResult.Succeeded)
             {
@@ -186,7 +205,7 @@ namespace Infrastructure.Services
                 return CreateIdentityError<List<string>>(removeResult.Errors);
             }
 
-            user.UserRolesModified(modifiedBy);
+            user.UserRolesChanged(modifiedBy);
             var updateResult = await _userManager.UpdateAsync(user);
             if (!updateResult.Succeeded)
             {
@@ -202,40 +221,50 @@ namespace Infrastructure.Services
                 .Where(u => ids.Contains(u.Id))
                 .ToListAsync(cancellationToken);
 
+            if(users.Count == 0)
+            {
+                return ids.Count == 1
+                    ? Result.Failure<List<string>>(UserErrors.NotFound.User(ids[0]))
+                    : Result.Failure<List<string>>(UserErrors.NotFound.Users);
+            }
+
             var deletedUsers = new List<string>();
-            if (users.Count == 0)
-            {
-                if (ids.Count == 1)
-                {
-                    return Result.Failure<List<string>>(UserErrors.NotFound.User(ids[0]));
-                }
-                return Result.Failure<List<string>>(UserErrors.NotFound.Users);
-            }
-            else
-            {
-                foreach (var user in users)
-                {
-                    user.DeletedBy = deletedBy;
 
-                    var deleteResult = await _userManager.DeleteAsync(user);
-                    if (!deleteResult.Succeeded)
-                    {
-                        return CreateIdentityError<List<string>>(deleteResult.Errors);
-                    }
-                    var deletedUserRoles = await _userManager.GetRolesAsync(user);
-                    if (deletedUserRoles.Count > 0)
-                    {
-                        var removeRolesResult = await _userManager.RemoveFromRolesAsync(user, deletedUserRoles);
-                        if (!removeRolesResult.Succeeded)
-                        {
-                            return CreateIdentityError<List<string>>(removeRolesResult.Errors);
-                        }
-                    }
-
-                    deletedUsers.Add(user.Id);
+            foreach (var user in users)
+            {
+                if (IsUserProtected(user))
+                {
+                    return Result.Failure<List<string>>(UserErrors.Authorization.ProtectedUser(user.Email!));
                 }
-                return deletedUsers;
+
+                user.DeletedBy = deletedBy;
+                var deletedResult = await _userManager.DeleteAsync(user);
+                if (!deletedResult.Succeeded)
+                {
+                    return CreateIdentityError<List<string>>(deletedResult.Errors);
+                }
+
+                var deletedUserRoles = await _userManager.GetRolesAsync(user);
+                if(deletedUserRoles.Count > 0)
+                {
+                    var removeRolesResult = await _userManager.RemoveFromRolesAsync(user, deletedUserRoles);
+                    if (!removeRolesResult.Succeeded)
+                    {
+                        return CreateIdentityError<List<string>>(removeRolesResult.Errors);
+                    }
+                }
+
+                deletedUsers.Add(user.Email!);
             }
+
+            if(deletedUsers.Count == 0)
+            {
+                return ids.Count == 1
+                    ? Result.Failure<List<string>>(UserErrors.General.OperationFailed("The user is already deleted."))
+                    : Result.Failure<List<string>>(UserErrors.General.OperationFailed("Users are already deleted."));
+            }
+
+            return deletedUsers;
         }
 
         public async Task<Result> DeleteUserRolesByRoleNameAsync(string roleName, CancellationToken cancellationToken)
@@ -274,6 +303,7 @@ namespace Infrastructure.Services
             return Result.Failure(error);
         }
 
+
         private static Expression<Func<User, object>> GetSortProperty(string? sortColumn)
         {
             return sortColumn?.ToLower() switch
@@ -283,6 +313,11 @@ namespace Infrastructure.Services
                 "email" => user => user.Email!,
                 _ => user => user.Id
             };
+        }
+
+        private bool IsUserProtected(User user)
+        {
+            return ProtectedUsers.Emails.Contains(user.Email!);
         }
     }
 }

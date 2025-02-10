@@ -9,6 +9,7 @@ using Domain.Permissions;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
+using Domain.RolePermissions;
 
 namespace Infrastructure.Persistence
 {
@@ -25,228 +26,211 @@ namespace Infrastructure.Persistence
 
             var createdBy = "default";
 
-            // Permissions
-            IEnumerable<Permission> permissions = PermissionConstants.AllPermissions
-                .Select(p => Permission.Create(p!, null, createdBy));
-
-            foreach (var permission in permissions)
+            using var transaction = await context.Database.BeginTransactionAsync();
+            try
             {
-                if (!await context.Permissions.AnyAsync(p => p.Name == permission.Name))
+                // Seed permissions
+                var permissions = Permissions.AllPermissions;
+                var dbPermissions = await context.Permissions.ToListAsync();
+                var permissionsToAdd = permissions.Except(dbPermissions);
+                var permissionsToRemove = dbPermissions.Except(permissions);
+
+                foreach (var permission in permissionsToRemove)
+                {
+                    context.Permissions.Remove(permission);
+                }
+
+                foreach (var permission in permissionsToAdd)
                 {
                     context.Permissions.Add(permission);
                 }
-            }
 
-            await context.SaveChangesAsync();
+                await context.SaveChangesAsync();
 
-            var allRolePermissions = new Dictionary<string, string[]>
-            {
+                // Seed roles and assign permissions
+                foreach (var roleMapping in DefaultRolePermissions.RolePermissionMappings)
                 {
-                    RoleConstants.Admin,
-                    new[]
+                    var roleName = roleMapping.Key;
+                    var rolePermissionNames = roleMapping.Value;
+
+                    var role = await roleManager.FindByNameAsync(roleName);
+                    if (role is null)
                     {
-                        PermissionConstants.HomeAccess,
-
-                        PermissionConstants.DashboardAccess,
-
-                        PermissionConstants.UsersAccess,
-                        PermissionConstants.UsersCreate,
-                        PermissionConstants.UsersRead,
-                        PermissionConstants.UsersEdit,
-                        PermissionConstants.UsersDelete,
-                        PermissionConstants.UsersStatusChange,
-                        PermissionConstants.UsersReadRoles,
-                        PermissionConstants.UsersAssignRoles,
-
-                        PermissionConstants.RolesAccess,
-                        PermissionConstants.RolesCreate,
-                        PermissionConstants.RolesRead,
-                        PermissionConstants.RolesEdit,
-                        PermissionConstants.RolesStatusChange,
-                        PermissionConstants.RolesDelete,
-                        PermissionConstants.RolesReadPermissions,
-                        PermissionConstants.RolesManagePermissions,
-
-                        PermissionConstants.AppsAccess,
-                        PermissionConstants.AppsRead,
-                        PermissionConstants.AppsCreate,
-                        PermissionConstants.AppsEdit,
-                        PermissionConstants.AppsStatusChange,
-                        PermissionConstants.AppsDelete,
-
-                        PermissionConstants.PermissionsRead,
-                        PermissionConstants.PermissionsEdit,
-
-                        PermissionConstants.AppPortalAccess,
-
-                        PermissionConstants.AuditLogsAccess,
-                        PermissionConstants.AuditLogsExport,
-
-                        PermissionConstants.SettingsManage,
-                    }
-                },
-                {
-                    RoleConstants.Manager,
-                    new[]
-                    {
-                        PermissionConstants.HomeAccess,
-
-                        PermissionConstants.DashboardAccess,
-
-                        PermissionConstants.UsersAccess,
-                        PermissionConstants.UsersRead,
-                        PermissionConstants.UsersStatusChange,
-                        PermissionConstants.UsersReadRoles,
-                        PermissionConstants.UsersAssignRoles,
-
-                        PermissionConstants.RolesAccess,
-                        PermissionConstants.RolesCreate,
-                        PermissionConstants.RolesRead,
-                        PermissionConstants.RolesEdit,
-                        PermissionConstants.RolesStatusChange,
-                        PermissionConstants.RolesReadPermissions,
-                        PermissionConstants.RolesManagePermissions,
-
-                        PermissionConstants.AppsAccess,
-                        PermissionConstants.AppsRead,
-
-                        PermissionConstants.PermissionsRead,
-
-                        PermissionConstants.AppPortalAccess,
-
-                        PermissionConstants.AuditLogsAccess,
-                        PermissionConstants.AuditLogsExport,
-
-                        PermissionConstants.SettingsManage,
-                    }
-                },
-                {
-                    RoleConstants.User,
-                    new[]
-                    {
-                        PermissionConstants.HomeAccess,
-
-                        PermissionConstants.DashboardAccess,
-
-                        PermissionConstants.AppPortalAccess,
-                    }
-                }
-            };
-
-            // Roles
-            IEnumerable<Role> roles = RoleConstants.AllRoles
-                .Select(r => new Role(r!, null, createdBy));
-
-            foreach (var role in roles)
-            {
-                if(!await context.Roles.AnyAsync(r => r.Name == role.Name))
-                {
-                    await roleManager.CreateAsync(role);
-                    //context.Roles.Add(role);
-                }
-            }
-
-            await context.SaveChangesAsync();
-
-            // Assign role permissions
-            foreach(var role in roles)
-            {
-                var dbRole = await context.Roles
-                    .Include(u => u.RolePermissions)
-                    .FirstOrDefaultAsync(r => r.Name == role.Name);
-
-                if(dbRole is not null)
-                {
-                    var permissionsToAdd = new List<Permission>();
-                    foreach (string permissionName in allRolePermissions[dbRole.Name!])
-                    {
-                        Permission? permission = await context.Permissions.FirstOrDefaultAsync(p => p.Name == permissionName);
-                        if (permission is not null)
+                        role = new Role(roleName, null, createdBy);
+                        var roleCreatedResult = await roleManager.CreateAsync(role);
+                        if (!roleCreatedResult.Succeeded)
                         {
-                            if(!dbRole.RolePermissions.Any(rp => rp.PermissionId == permission.Id))
+                            var errors = string.Join(", ", roleCreatedResult.Errors.Select(e => e.Description));
+                            throw new Exception($"Failed to create role: {errors}");
+                        }
+
+                        foreach (var rolePermissionName in rolePermissionNames)
+                        {
+                            var rolePermisssion = permissions.FirstOrDefault(p => p.Name == rolePermissionName);
+                            if (rolePermisssion is not null)
                             {
-                                permissionsToAdd.Add(permission);
+                                role.RolePermissions.Add(new RolePermission
+                                {
+                                    RoleId = role.Id,
+                                    PermissionId = rolePermisssion.Id
+                                });
+                            }
+                        }
+                    }
+                    else
+                    {
+                        var existingRolePermissions = await context.RolePermissions
+                            .Where(rp => rp.RoleId == role.Id)
+                            .Include(rp => rp.Permission)
+                            .ToListAsync();
+
+                        var existingRolePermissionNames = existingRolePermissions
+                            .Select(rp => rp.Permission)
+                            .Select(p => p.Name);
+
+                        var rolePermissionsToAdd = rolePermissionNames
+                            .Except(existingRolePermissionNames);
+
+                        var rolePermissionsToRemove = existingRolePermissionNames
+                            .Except(rolePermissionNames);
+
+                        if (rolePermissionsToRemove.Count() > 0)
+                        {
+                            foreach (var rolePermissionToRemove in rolePermissionsToRemove)
+                            {
+                                var permissionToRemove = existingRolePermissions
+                                    .FirstOrDefault(rp => rp.Permission.Name == rolePermissionToRemove);
+                                if (permissionToRemove is not null)
+                                {
+                                    role.RolePermissions.Remove(permissionToRemove);
+                                }
+                            }
+                        }
+
+                        if (rolePermissionsToAdd.Count() > 0)
+                        {
+                            foreach (var rolePermissionToAdd in rolePermissionsToAdd)
+                            {
+                                var permissionToAdd = permissions.FirstOrDefault(p => p.Name == rolePermissionToAdd);
+                                if (permissionToAdd is not null)
+                                {
+                                    role.RolePermissions.Add(new RolePermission
+                                    {
+                                        RoleId = role.Id,
+                                        PermissionId = permissionToAdd.Id
+                                    });
+                                }
                             }
                         }
                     }
 
-                    if(permissionsToAdd.Count() > 0)
-                    {
-                        foreach (var rolePermission in dbRole.RolePermissions)
-                        {
-                            context.RolePermissions.Remove(rolePermission);
-                        }
+                    await context.SaveChangesAsync();
+                }
 
-                        foreach(var permission in permissionsToAdd)
-                        {
-                            context.RolePermissions.Add(new Domain.RolePermissions.RolePermission
-                            {
-                                RoleId = dbRole.Id,
-                                PermissionId = permission.Id
-                            });
-                        }
+                // Users
+                // Super Admin
+                var superadminFirstName = "system";
+                var superadminLastName = "superadministrator";
+                var superadminEmail = "superadmin@userforge.com";
+                var superadminPassword = "SuperAdmin@123";
+
+                User superadmin = User.Create(superadminFirstName, superadminLastName, superadminEmail, createdBy);
+                superadmin.EmailConfirmed = true;
+
+                if (!await context.Users.AnyAsync(u => u.Email == superadminEmail))
+                {
+                    var userCreatedResult = await userManager.CreateAsync(superadmin, superadminPassword);
+                    if (userCreatedResult.Succeeded)
+                    {
+                        await userManager.AddToRolesAsync(superadmin, [DefaultRoleConstants.SuperAdmin]);
+                    }
+                    else
+                    {
+                        var errors = string.Join(", ", userCreatedResult.Errors.Select(e => e.Description));
+                        throw new Exception($"Failed to create superadmin user: {errors}");
                     }
                 }
-            }
 
-            await unitOfWork.SaveChangesAsync();
+                // Admin
+                var adminFirstName = "system";
+                var adminLastName = "administrator";
+                var adminEmail = "admin@userforge.com";
+                var adminPassword = "Admin@123";
 
-            // Users
-            // Admin
-            var adminFirstName = "system";
-            var adminLastName = "administrator";
-            var adminEmail = "admin@userforge.com";
-            var adminPassword = "Admin@123";
+                User admin = User.Create(adminFirstName, adminLastName, adminEmail, createdBy);
+                admin.EmailConfirmed = true;
 
-            User admin = User.Create(adminFirstName, adminLastName, adminEmail, createdBy);
-            admin.EmailConfirmed = true;
-
-            if(!await context.Users.AnyAsync(u => u.Email == adminEmail))
-            {
-                var userCreatedResult = await userManager.CreateAsync(admin, adminPassword);
-                if (userCreatedResult.Succeeded)
+                if (!await context.Users.AnyAsync(u => u.Email == adminEmail))
                 {
-                    await userManager.AddToRolesAsync(admin, [RoleConstants.Admin, RoleConstants.User]);
+                    var userCreatedResult = await userManager.CreateAsync(admin, adminPassword);
+                    if (userCreatedResult.Succeeded)
+                    {
+                        await userManager.AddToRolesAsync(admin, [DefaultRoleConstants.Admin]);
+                    }
+                    else
+                    {
+                        var errors = string.Join(", ", userCreatedResult.Errors.Select(e => e.Description));
+                        throw new Exception($"Failed to create admin user: {errors}");
+                    }
                 }
-            }
 
-            //Manager
-            var managerFirstName = "system";
-            var managerLastName = "manager";
-            var managerEmail = "manager@userforge.com";
-            var managerPassword = "Manager@123";
+                //Manager
+                var managerFirstName = "system";
+                var managerLastName = "manager";
+                var managerEmail = "manager@userforge.com";
+                var managerPassword = "Manager@123";
 
-            User manager = User.Create(managerFirstName, managerLastName, managerEmail, createdBy);
-            manager.EmailConfirmed = true;
+                User manager = User.Create(managerFirstName, managerLastName, managerEmail, createdBy);
+                manager.EmailConfirmed = true;
 
-            if(!await context.Users.AnyAsync(u => u.Email == managerEmail))
-            {
-                var userCreatedResult = await userManager.CreateAsync(manager, managerPassword);
-                if (userCreatedResult.Succeeded)
+                if (!await context.Users.AnyAsync(u => u.Email == managerEmail))
                 {
-                    await userManager.AddToRolesAsync(manager, [RoleConstants.Manager, RoleConstants.User]);
+                    var userCreatedResult = await userManager.CreateAsync(manager, managerPassword);
+                    if (userCreatedResult.Succeeded)
+                    {
+                        await userManager.AddToRolesAsync(manager, [DefaultRoleConstants.Manager]);
+                    }
+                    else
+                    {
+                        var errors = string.Join(", ", userCreatedResult.Errors.Select(e => e.Description));
+                        throw new Exception($"Failed to create manager user: {errors}");
+                    }
                 }
-            }
 
-            await unitOfWork.SaveChangesAsync();
+                await unitOfWork.SaveChangesAsync();
 
-            //User
-            var userFirstName = "system";
-            var userLastName = "user";
-            var userEmail = "user@userforge.com";
-            var userPassword = "User@123";
+                //User
+                var userFirstName = "system";
+                var userLastName = "user";
+                var userEmail = "user@userforge.com";
+                var userPassword = "User@123";
 
-            User user = User.Create(userFirstName, userLastName, userEmail, createdBy);
-            user.EmailConfirmed = true;
+                User user = User.Create(userFirstName, userLastName, userEmail, createdBy);
+                user.EmailConfirmed = true;
 
-            if(!await userManager.Users.AnyAsync(u => u.Email == userEmail))
-            {
-                var userCreatedResult = await userManager.CreateAsync(user, userPassword);
-                if (userCreatedResult.Succeeded)
+                if (!await userManager.Users.AnyAsync(u => u.Email == userEmail))
                 {
-                    await userManager.AddToRolesAsync(user, [RoleConstants.User]);
+                    var userCreatedResult = await userManager.CreateAsync(user, userPassword);
+                    if (userCreatedResult.Succeeded)
+                    {
+                        await userManager.AddToRolesAsync(user, [DefaultRoleConstants.User]);
+                    }
+                    else
+                    {
+                        var errors = string.Join(", ", userCreatedResult.Errors.Select(e => e.Description));
+                        throw new Exception($"Failed to create user: {errors}");
+                    }
                 }
+
+                await transaction.CommitAsync();
             }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                throw new Exception("Seeding failed. Rolling back changes.", ex);
+            }
+
+            
         }
     }
 }

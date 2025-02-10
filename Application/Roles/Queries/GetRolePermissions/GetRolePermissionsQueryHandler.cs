@@ -1,58 +1,46 @@
 ﻿using Application.Abstractions.Messaging;
-using Application.Abstractions.Repositories;
 using Application.Abstractions.Services;
-using Application.Permissions.Queries.GetAll;
 using Domain.Permissions;
 using Domain.Roles;
 using SharedKernal;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Application.Roles.Queries.GetRolePermissions
 {
-    internal sealed class GetRolePermissionsQueryHandler : IQueryHandler<GetRolePermissionsQuery, GetRolePermissionsResponse>
+    internal sealed class GetRolePermissionsQueryHandler : IQueryHandler<GetRolePermissionsQuery, RolePermissionsResponse>
     {
         private readonly IRoleManagementService _roleManagementService;
-        private readonly IPermissionsRepository _permissionsRepository;
 
-        public GetRolePermissionsQueryHandler(IRoleManagementService roleManagementService, IPermissionsRepository permissionsRepository)
+        public GetRolePermissionsQueryHandler(IRoleManagementService roleManagementService)
         {
             _roleManagementService = roleManagementService;
-            _permissionsRepository = permissionsRepository;
         }
 
-        public async Task<Result<GetRolePermissionsResponse>> Handle(GetRolePermissionsQuery request, CancellationToken cancellationToken)
+        public async Task<Result<RolePermissionsResponse>> Handle(GetRolePermissionsQuery request, CancellationToken cancellationToken)
         {
             var role = await _roleManagementService.GetRoleWithRolePermissionsAsync(request.RoleId);
             if(role is null)
             {
-                return Result.Failure<GetRolePermissionsResponse>(RoleErrors.NotFound.Role(request.RoleId));
+                return Result.Failure<RolePermissionsResponse>(RoleErrors.NotFound.Role(request.RoleId));
             }
 
             if(role.RolePermissions.Count == 0)
             {
-                return Result.Failure<GetRolePermissionsResponse>(RoleErrors.Permissions.NoPermissionsFound(role.Name!));
+                return Result.Failure<RolePermissionsResponse>(RoleErrors.Permissions.NoPermissionsFound(role.Name!));
             }
 
-            var permissions = new List<GetAllPermissionsResponse>();
+            List<RolePermissionResponse> permissions = role.RolePermissions
+                .Select(rp => rp.Permission)
+                .Select(p => new RolePermissionResponse(
+                    Id: p.Id,
+                    Name: p.Name,
+                    Description: p.Description))
+                .ToList();
 
-            foreach(var rolePermission in role.RolePermissions)
-            {
-                var permission = await _permissionsRepository.GetByIdAsync(rolePermission.PermissionId!);
-                if(permission is null)
-                {
-                    return Result.Failure<GetRolePermissionsResponse>(PermissionErrors.NotFound.MissingPermissions);
-                }
-
-                permissions.Add(new GetAllPermissionsResponse(
-                    permission.Id,
-                    permission.Name,
-                    permission.Description,
-                    permission.IsActive));
-            }
-
-            return new GetRolePermissionsResponse(role.Id, role.Name!, role.Description, role.IsActive, permissions);
+            return new RolePermissionsResponse(role.Id, role.Name!, role.Description, role.IsActive, permissions);
         }
     }
 }

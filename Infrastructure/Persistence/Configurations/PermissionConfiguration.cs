@@ -2,8 +2,6 @@
 using Domain.Permissions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Infrastructure.Persistence.Configurations
 {
@@ -15,8 +13,7 @@ namespace Infrastructure.Persistence.Configurations
             builder.Property(x => x.Name).IsRequired().HasMaxLength(256);
             builder.Property(x => x.Description).HasMaxLength(450);
 
-            builder.HasIndex(x => x.Name).IsUnique().HasFilter("[IsDeleted] = 0");
-            builder.HasIndex(x => x.IsDeleted);
+            builder.HasIndex(x => x.Name).IsUnique();
 
             builder.HasMany(p => p.RolePermissions)
                 .WithOne(rp => rp.Permission)
@@ -24,14 +21,7 @@ namespace Infrastructure.Persistence.Configurations
                 .OnDelete(DeleteBehavior.Cascade)
                 .IsRequired(false);
 
-            builder.HasQueryFilter(u => !u.IsDeleted);
-
             builder.ToTable(TableNames.Permissions);
-
-            //IEnumerable<Permission> permissions = DefaultPermissions.AllPermissions
-            //    .Select(p => Permission.Create(p, null, "default"));
-
-            //builder.HasData(permissions);
         }
     }
 }

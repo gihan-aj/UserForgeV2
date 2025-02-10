@@ -50,6 +50,11 @@ namespace Infrastructure.Services
                 return RoleErrors.NotFound.Role(roleId);
             }
 
+            if (IsProtectedRole(role))
+            {
+                return RoleErrors.Authorization.ProtectedRole(role.Name!);
+            }
+
             var normalizedRoleName = _roleManager.NormalizeKey(roleName);
             role.Update(roleName, normalizedRoleName, description, userId);
 
@@ -127,6 +132,7 @@ namespace Infrastructure.Services
         {
             return await _roleManager.Roles
                 .Include(r => r.RolePermissions)
+                .ThenInclude(rp => rp.Permission)
                 .FirstOrDefaultAsync(r => r.Id == id);
         }
 
@@ -136,37 +142,37 @@ namespace Infrastructure.Services
                 .Where(r => ids.Contains(r.Id))
                 .ToListAsync(cancellationToken);
 
+            if(roles.Count() == 0)
+            {
+                return ids.Count == 1
+                    ? Result.Failure<List<string>>(RoleErrors.NotFound.Role(ids[0]))
+                    : Result.Failure<List<string>>(RoleErrors.NotFound.Roles);
+            }
+
             var activatedRoles = new List<string>();
 
-            if (roles.Count == 0)
+            foreach (var role in roles)
             {
-                if (ids.Count == 1)
+                if (IsProtectedRole(role))
                 {
-                    return Result.Failure<List<string>>(RoleErrors.NotFound.Role(ids[0]));
+                    return Result.Failure<List<string>>(RoleErrors.Authorization.ProtectedRole(role.Name!));
                 }
 
-                return Result.Failure<List<string>>(RoleErrors.NotFound.Roles);
-            }
-            else
-            {
-                foreach (var role in roles)
+                if (!role.IsActive)
                 {
-                    if (!role.IsActive)
+                    role.Activate(modifiedBy);
+                    var result = await _roleManager.UpdateAsync(role);
+                    if (!result.Succeeded)
                     {
-                        role.Activate(modifiedBy);
-                        var result = await _roleManager.UpdateAsync(role);
-                        if(!result.Succeeded)
-                        {
-                            return CreateIdentityError<List<string>>(result.Errors);
-                        }
-
-                        activatedRoles.Add(role.Name!);
+                        return CreateIdentityError<List<string>>(result.Errors);
                     }
 
+                    activatedRoles.Add(role.Name!);
                 }
 
-                return activatedRoles;
             }
+
+            return activatedRoles;
         }
 
         public async Task<Result<List<string>>> DeactivateRolesAsync(List<string> ids, string modifiedBy, CancellationToken cancellationToken)
@@ -175,33 +181,35 @@ namespace Infrastructure.Services
                 .Where(r => ids.Contains(r.Id))
                 .ToListAsync(cancellationToken);
 
-            var deactivatedRoles = new List<string>();
-
             if (roles.Count == 0)
             {
-                if (ids.Count == 1)
-                {
-                    return Result.Failure<List<string>>(RoleErrors.NotFound.Role(ids[0]));
-                }
-                return Result.Failure<List<string>>(RoleErrors.NotFound.Roles);
+                return ids.Count == 1
+                    ? Result.Failure<List<string>>(RoleErrors.NotFound.Role(ids[0]))
+                    : Result.Failure<List<string>>(RoleErrors.NotFound.Roles);
             }
-            else
+
+            var deactivatedRoles = new List<string>();
+
+            foreach (var role in roles)
             {
-                foreach (var role in roles)
+                if(IsProtectedRole(role))
                 {
-                    if (role.IsActive)
-                    {
-                        role.Deactivate(modifiedBy);
-                        var result = await _roleManager.UpdateAsync(role);
-                        if (!result.Succeeded)
-                        {
-                            return CreateIdentityError<List<string>>(result.Errors);
-                        }
-                        deactivatedRoles.Add(role.Name!);
-                    }
+                    return Result.Failure<List<string>>(RoleErrors.Authorization.ProtectedRole(role.Name!));
                 }
-                return deactivatedRoles;
+
+                if (role.IsActive)
+                {
+                    role.Deactivate(modifiedBy);
+                    var result = await _roleManager.UpdateAsync(role);
+                    if (!result.Succeeded)
+                    {
+                        return CreateIdentityError<List<string>>(result.Errors);
+                    }
+                    deactivatedRoles.Add(role.Name!);
+                }
             }
+
+            return deactivatedRoles;
         }
         
         public async Task<Result<List<string>>> DeleteRolesAsync(List<string> ids, string deletedBy, CancellationToken cancellationToken)
@@ -210,36 +218,38 @@ namespace Infrastructure.Services
                 .Where(r => ids.Contains(r.Id))
                 .ToListAsync(cancellationToken);
 
-            var deletedNames = new List<string>();
-
             if (roles.Count == 0)
             {
-                if (ids.Count == 1)
-                {
-                    return Result.Failure<List<string>>(RoleErrors.NotFound.Role(ids[0]));
-                }
-                return Result.Failure<List<string>>(RoleErrors.NotFound.Roles);
+                return ids.Count == 1
+                    ? Result.Failure<List<string>>(RoleErrors.NotFound.Role(ids[0]))
+                    : Result.Failure<List<string>>(RoleErrors.NotFound.Roles);
             }
-            else
+
+            var deletedNames = new List<string>();
+
+            foreach (var role in roles)
             {
-                foreach (var role in roles)
+                if (IsProtectedRole(role))
                 {
-                    if(!role.IsDeleted)
-                    {
-                        role.DeletedBy = deletedBy;
-
-                        var result = await _roleManager.DeleteAsync(role);
-                        if (!result.Succeeded)
-                        {
-                            return CreateIdentityError<List<string>>(result.Errors);
-                        }
-                       
-                        deletedNames.Add(role.Name!);
-                    }
+                    return Result.Failure<List<string>>(RoleErrors.Authorization.ProtectedRole(role.Name!));
                 }
 
-                return deletedNames;
+                if (!role.IsDeleted)
+                {
+                    role.DeletedBy = deletedBy;
+
+                    var result = await _roleManager.DeleteAsync(role);
+                    if (!result.Succeeded)
+                    {
+                        return CreateIdentityError<List<string>>(result.Errors);
+                    }
+
+                    deletedNames.Add(role.Name!);
+                }
             }
+
+            return deletedNames;
+
         }
 
         private Result CreateIdentityError(IEnumerable<IdentityError> errors)
@@ -272,6 +282,11 @@ namespace Infrastructure.Services
                 "id" => role => role.Id,
                 _ => user => user.Id
             };
+        }
+
+        private bool IsProtectedRole(Role role)
+        {
+            return DefaultRoleConstants.AllRoles.Contains(role.Name);
         }
     }
 }

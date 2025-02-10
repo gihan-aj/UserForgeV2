@@ -105,7 +105,7 @@ namespace Domain.Users
             LastModifiedOn = DateTime.UtcNow;
         }
 
-        public void UserRolesModified(string modifiedBy)
+        public void UserRolesChanged(string modifiedBy)
         {
             UserRolesModifiedBy = modifiedBy;
             UserRolesModifiedOn = DateTime.UtcNow;

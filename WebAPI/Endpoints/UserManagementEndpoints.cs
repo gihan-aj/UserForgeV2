@@ -76,21 +76,21 @@ namespace WebAPI.Endpoints
                     return HandleFailure(result);
                 }
 
-                var activatedIds = result.Value;
+                var activatedUsers = result.Value;
 
-                if (activatedIds.Count == 1)
+                if (activatedUsers.Count == 1)
                 {
                     return Results.Ok(
                     new
                     {
-                        Message = $"User with id, {activatedIds[0]} was activated."
+                        Message = $"User with email, {activatedUsers[0]} was activated."
                     });
                 }
 
                 return Results.Ok(
                     new
                     {
-                        Message = $"Users with ids, {string.Join(",", activatedIds)} were activated."
+                        Message = $"Users with emails, {string.Join(", ", activatedUsers)} were activated."
                     });
             });
 
@@ -115,21 +115,21 @@ namespace WebAPI.Endpoints
                     return HandleFailure(result);
                 }
 
-                var deactivatedIds = result.Value;
-
-                if (deactivatedIds.Count == 1)
+                var deactivatedUsers = result.Value;
+                
+                if (deactivatedUsers.Count == 1)
                 {
                     return Results.Ok(
                     new
                     {
-                        Message = $"User with id, {deactivatedIds[0]} was deactivated."
+                        Message = $"User with email, {deactivatedUsers[0]} was deactivated."
                     });
                 }
 
                 return Results.Ok(
                     new
                     {
-                        Message = $"Users with ids, {string.Join(",", deactivatedIds)} were deactivated."
+                        Message = $"Users with emails, {string.Join(", ", deactivatedUsers)} were deactivated."
                     });
             });
 
@@ -189,7 +189,7 @@ namespace WebAPI.Endpoints
                 return Results.Ok(
                     new
                     {
-                        Message = $"Roles, {string.Join(",", assignedRoleIds)} were assigned to user."
+                        Message = $"Roles, {string.Join(", ", assignedRoleIds)} were assigned to user."
                     });
             });
 
@@ -236,19 +236,19 @@ namespace WebAPI.Endpoints
                 {
                     return HandleFailure(result);
                 }
-                var deletedIds = result.Value;
-                if (deletedIds.Count == 1)
+                var deletedUsers = result.Value;
+                if (deletedUsers.Count == 1)
                 {
                     return Results.Ok(
                     new
                     {
-                        Message = $"User with id, {deletedIds[0]} was deleted."
+                        Message = $"User with email, {deletedUsers[0]} was deleted."
                     });
                 }
                 return Results.Ok(
                     new
                     {
-                        Message = $"Users with ids, {string.Join(",", deletedIds)} were deleted."
+                        Message = $"Users with emails,  {string.Join(", ", deletedUsers)} were deleted."
                     });
             });
         }
@@ -282,6 +282,12 @@ namespace WebAPI.Endpoints
                 Results.NotFound(ErrorHandler.CreateProblemDetails(
                     "Users Not Found",
                     StatusCodes.Status404NotFound,
+                    result.Error)),
+                
+                { Error: { Code: "ProtectedUser" } } =>
+                Results.Problem(ErrorHandler.CreateProblemDetails(
+                    "Protected User",
+                    StatusCodes.Status400BadRequest,
                     result.Error)),
 
                 { Error: { Code: "InvalidAccessToken" } } =>
