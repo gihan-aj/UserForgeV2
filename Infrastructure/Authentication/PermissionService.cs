@@ -35,6 +35,7 @@ namespace Infrastructure.Authentication
 
             return roles
                 .SelectMany(r => r)
+                .Where(r => r.IsActive)
                 .SelectMany(u => u.RolePermissions)
                 .Select(ur => ur.Permission)
                 .Select(p => p.Name)
@@ -54,6 +55,7 @@ namespace Infrastructure.Authentication
 
             return roles
                 .SelectMany(r => r)
+                .Where(r => r.IsActive)
                 .SelectMany(u => u.RolePermissions)
                 .Select(ur => ur.Permission)
                 .Select(p => p.Name)
