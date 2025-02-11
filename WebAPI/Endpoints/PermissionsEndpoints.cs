@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using SharedKernal;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using WebAPI.Helpers;
 
@@ -33,7 +34,8 @@ namespace WebAPI.Endpoints
                 }
 
                 return Results.Ok(result.Value);
-            });
+            })
+                .Produces(StatusCodes.Status200OK, typeof(List<PermissionDetails>));
         }
 
         private static IResult HandleFailure(Result result) =>

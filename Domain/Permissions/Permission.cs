@@ -7,11 +7,12 @@ namespace Domain.Permissions
 {
     public class Permission
     {
-        private Permission(string name, string description)
+        private Permission(string name, string description, int order)
         {
             Id = Guid.NewGuid().ToString();
             Name = name;
             Description = description;
+            Order = order;
         }
 
         public string Id { get; private set; }
@@ -20,11 +21,13 @@ namespace Domain.Permissions
 
         public string Description { get; private set; }
 
+        public int Order { get; private set; }
+
         public virtual ICollection<RolePermission> RolePermissions { get; private set; } = [];
 
-        public static Permission Create(string name, string description)
+        public static Permission Create(string name, string description, int order)
         {
-             return new Permission(name, description);
+             return new Permission(name, description, order);
         } 
 
         public void AddRolePermissionsRange(List<Role> roles, string modifiedBy)

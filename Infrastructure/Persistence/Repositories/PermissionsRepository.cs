@@ -27,6 +27,7 @@ namespace Infrastructure.Persistence.Repositories
         public async Task<Result<List<Permission>>> GetAllPermissionsWithAssignedRoles(CancellationToken cancellationToken)
         {
             return await _context.Permissions
+                .OrderBy (x => x.Order)
                 .Include(p => p.RolePermissions)
                 .ThenInclude(rp => rp.Role)
                 .ToListAsync(cancellationToken);

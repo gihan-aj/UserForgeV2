@@ -17,7 +17,8 @@ namespace Infrastructure.Persistence.Migrations
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false)
+                    Description = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    Order = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -265,6 +266,12 @@ namespace Infrastructure.Persistence.Migrations
                 name: "IX_Permissions_Name",
                 table: "Permissions",
                 column: "Name",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Permissions_Order",
+                table: "Permissions",
+                column: "Order",
                 unique: true);
 
             migrationBuilder.CreateIndex(

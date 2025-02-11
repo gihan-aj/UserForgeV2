@@ -12,8 +12,10 @@ namespace Infrastructure.Persistence.Configurations
             builder.HasKey(x => x.Id);
             builder.Property(x => x.Name).IsRequired().HasMaxLength(256);
             builder.Property(x => x.Description).HasMaxLength(450);
+            builder.Property(x => x.Order).IsRequired();
 
             builder.HasIndex(x => x.Name).IsUnique();
+            builder.HasIndex(x => x.Order).IsUnique();
 
             builder.HasMany(p => p.RolePermissions)
                 .WithOne(rp => rp.Permission)

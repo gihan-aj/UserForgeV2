@@ -38,8 +38,6 @@ namespace Domain.RolePermissions
                     PermissionConstants.AppsDelete,
                     PermissionConstants.PermissionsAccess,
                     PermissionConstants.PermissionsRead,
-                    PermissionConstants.PermissionsEdit,
-                    PermissionConstants.PermissionsStatusChange,
                     PermissionConstants.AppPortalAccess,
                     PermissionConstants.AuditLogsAccess,
                     PermissionConstants.AuditLogsExport,

@@ -60,8 +60,6 @@ namespace Domain.Permissions
 
         public const string PermissionsAccess = "permissions.access";       // Access permissions
         public const string PermissionsRead = "permissions.read";           // View permissions
-        public const string PermissionsEdit = "permissions.edit";           // Edit a permission
-        public const string PermissionsStatusChange = "permissions.status"; // Activate/deactivate a permission
 
         public const string AppPortalAccess = "app-portal.access";
 
