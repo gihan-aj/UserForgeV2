@@ -8,5 +8,6 @@ namespace Application.Roles.Queries.GetAll
         string? SortColumn,
         string? SortOrder,
         int Page,
-        int PageSize) : IQuery<PaginatedList<GetAllRolesResponse>>;
+        int PageSize,
+        int appId) : IQuery<PaginatedList<GetAllRolesResponse>>;
 }

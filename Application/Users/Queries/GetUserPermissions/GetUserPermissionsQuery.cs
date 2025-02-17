@@ -3,5 +3,5 @@ using System.Collections.Generic;
 
 namespace Application.Users.Queries.GetUserPermissions
 {
-    public record GetUserPermissionsQuery(string UserId): IQuery<List<string>>;
+    public record GetUserPermissionsQuery(string UserId, int AppId): IQuery<List<string>>;
 }

@@ -1,4 +1,5 @@
-﻿using Domain.Permissions;
+﻿using Domain.Apps;
+using Domain.Permissions;
 using Domain.Primitives;
 using Domain.RolePermissions;
 using Domain.UserRoles;
@@ -11,12 +12,13 @@ namespace Domain.Roles
 {
     public class Role : IdentityRole<string>, IAuditable, ISoftDeletable
     {
-        public Role(string name, string? description, string createdBy) : base(name)
+        public Role(string name, string? description, int appId, string createdBy) : base(name)
         {
             Id = Guid.NewGuid().ToString(); // Explicitly initialize the Id
             Description = string.IsNullOrWhiteSpace(description)
                 ? null
                 : description;
+            AppId = appId;
             IsActive = true;
             CreatedBy = createdBy;
             CreatedOn = DateTime.UtcNow;
@@ -43,6 +45,10 @@ namespace Domain.Roles
         public string? DeletedBy { get; set; }
 
         public bool IsDeleted { get; set; }
+
+        public int AppId { get; set; }
+
+        public App? App { get; set; }
 
         public virtual ICollection<UserRole> UserRoles { get; private set; } = [];
 

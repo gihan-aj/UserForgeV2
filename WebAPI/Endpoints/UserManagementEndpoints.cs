@@ -32,7 +32,7 @@ namespace WebAPI.Endpoints
                 .WithTags("User Management");
 
             group.MapGet("",
-                [HasPermission(PermissionConstants.UsersRead)]
+                [HasPermission(SsoPermissionConstants.UsersAccess)]
                 async (
                         string? searchTerm,
                         string? sortColumn,
@@ -56,7 +56,7 @@ namespace WebAPI.Endpoints
                 .Produces(StatusCodes.Status200OK, typeof(PaginatedList<GetAllUsersResponse>));
 
             group.MapPut("activate",
-                [HasPermission(PermissionConstants.UsersStatusChange)]
+                [HasPermission(SsoPermissionConstants.UsersStatusChange)]
                 async (
                         BulkIdsRequest<string> request,
                         HttpContext httpContext,
@@ -95,7 +95,7 @@ namespace WebAPI.Endpoints
             });
 
             group.MapPut("deactivate",
-                [HasPermission(PermissionConstants.UsersStatusChange)]
+                [HasPermission(SsoPermissionConstants.UsersStatusChange)]
                 async (
                         BulkIdsRequest<string> request,
                         HttpContext httpContext,
@@ -134,7 +134,7 @@ namespace WebAPI.Endpoints
             });
 
             group.MapGet("user-roles",
-                [HasPermission(PermissionConstants.UsersReadRoles)]
+                [HasPermission(SsoPermissionConstants.UsersRolesAccess)]
                 async (
                     string UserId,
                     ISender sender,
@@ -151,7 +151,7 @@ namespace WebAPI.Endpoints
                 .Produces(StatusCodes.Status200OK, typeof(string[]));
 
             group.MapPut("assign-roles", 
-                [HasPermission(PermissionConstants.UsersAssignRoles)] 
+                [HasPermission(SsoPermissionConstants.UsersRolesManage)] 
                 async (
                     AssignUserRolesRequest request,
                     HttpContext httpContext,
@@ -194,7 +194,7 @@ namespace WebAPI.Endpoints
             });
 
             group.MapPut("bulk-assign-roles",
-                [HasPermission(PermissionConstants.UsersAssignRoles)]
+                [HasPermission(SsoPermissionConstants.UsersRolesManage)]
                     async (BulkAssignRolesRequest request,
                     HttpContext httpContext,
                     ISender sender,
@@ -217,7 +217,7 @@ namespace WebAPI.Endpoints
             });
 
             group.MapPut("delete", 
-                [HasPermission(PermissionConstants.UsersDelete)]
+                [HasPermission(SsoPermissionConstants.UsersDelete)]
                 async (
                     BulkIdsRequest<string> request,
                     HttpContext httpContext,

@@ -24,6 +24,7 @@ namespace Application.Roles.Queries.GetAll
                 request.SortOrder,
                 request.Page,
                 request.PageSize,
+                request.appId,
                 cancellationToken);
         }
     }

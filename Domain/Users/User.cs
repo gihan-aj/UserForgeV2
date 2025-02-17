@@ -1,10 +1,10 @@
-﻿using Domain.Primitives;
+﻿using Domain.Apps;
+using Domain.Primitives;
 using Domain.RefreshTokens;
 using Domain.UserRoles;
 using Domain.UserSettings;
 using Microsoft.AspNetCore.Identity;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 
 namespace Domain.Users
@@ -60,6 +60,8 @@ namespace Domain.Users
         public virtual ICollection<UserRole> UserRoles { get; set; } = [];
 
         public virtual ICollection<RefreshToken> RefreshTokens { get; set; } = [];
+
+        public virtual ICollection<App> Apps { get; private set; } = new HashSet<App>();
 
         public static User Create(string firstName, string lastName, string email)
         {

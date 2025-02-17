@@ -3,6 +3,7 @@ using Application.Abstractions.Messaging;
 using Application.Abstractions.Repositories;
 using Application.Abstractions.Services;
 using Application.Settings;
+using Domain.Apps;
 using Microsoft.Extensions.Options;
 using SharedKernal;
 using System;
@@ -19,6 +20,7 @@ namespace Application.Users.Commands.Login
         private readonly IRefreshTokenRepository _refreshTokenRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly TokenSettings _tokenSettings;
+        private readonly IAppsRepository _appsRepository;
 
 
         public LoginUserCommandHandler(
@@ -26,13 +28,15 @@ namespace Application.Users.Commands.Login
             IRefreshTokenRepository refreshTokenRepository,
             ITokenService tokenService,
             IUnitOfWork unitOfWork,
-            IOptions<TokenSettings> tokenSettings)
+            IOptions<TokenSettings> tokenSettings,
+            IAppsRepository appsRepository)
         {
             _userService = userService;
             _tokenService = tokenService;
             _refreshTokenRepository = refreshTokenRepository;
             _unitOfWork = unitOfWork;
             _tokenSettings = tokenSettings.Value;
+            _appsRepository = appsRepository;
         }
 
         public async Task<Result<LoginUserResponse>> Handle(LoginUserCommand request, CancellationToken cancellationToken)
@@ -45,14 +49,21 @@ namespace Application.Users.Commands.Login
                 return Result.Failure<LoginUserResponse>(loginResult.Error);
             }
 
+            var app = _appsRepository.GetByNameAsync(AppNames.SsoApp);
+            if(app is null)
+            {
+                return Result.Failure<LoginUserResponse>(AppErrors.NotFound.AppIdNotFound);
+            }
+
             var user = loginResult.Value;
 
             string?[] roles = user.UserRoles
                 .Select(ur => ur.Role)
+                .Where(r => r.AppId == app.Id)
                 .Select(r => r.Name)
                 .ToArray();
 
-            var accessToken = _tokenService.CreateJwtToken(user, roles!);
+            var accessToken = _tokenService.CreateJwtToken(user, app.Id, roles!);
 
             string refreshToken = _tokenService.GenerateRefreshToken();  
 

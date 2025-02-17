@@ -11,27 +11,29 @@ using Application.Shared.Pagination;
 using System.Threading;
 using Application.Roles.Queries.GetAll;
 using Microsoft.EntityFrameworkCore;
+using Application.Abstractions.Data;
 
 namespace Infrastructure.Services
 {
     public class RoleManagementService : IRoleManagementService
     {
         private readonly RoleManager<Role> _roleManager;
-        public RoleManagementService(RoleManager<Role> roleManager)
+        public RoleManagementService(RoleManager<Role> roleManager, IApplicationDbContext context)
         {
             _roleManager = roleManager;
         }
 
-        public async Task<Result<string>> CreateAsync(string roleName, string description, string userId)
+        public async Task<Result<string>> CreateAsync(string roleName, string description, int appId, string userId)
         {
-            var roleExists = await _roleManager.RoleExistsAsync(roleName);
-            if(roleExists)
+            if(await _roleManager.Roles.AnyAsync(r => r.Name == roleName && r.AppId == appId))
             {
                 return Result.Failure<string>(RoleErrors.Conflict.RoleNameAlreadyExists(roleName));
             }
 
             //var role = new IdentityRole(roleName);
-            var role = new Role(roleName, description, userId);
+            var role = new Role(roleName, description, appId, userId);
+            var normalizedName = _roleManager.NormalizeKey(roleName);
+            role.NormalizedName = normalizedName;
 
             var result = await _roleManager.CreateAsync(role);
             if (!result.Succeeded)
@@ -73,9 +75,12 @@ namespace Infrastructure.Services
             string? sortOrder,
             int page,
             int pageSize,
+            int appId,
             CancellationToken cancellationToken)
         {
-            IQueryable<Role> rolesQuery = _roleManager.Roles.AsQueryable();
+            IQueryable<Role> rolesQuery = _roleManager.Roles
+                .Where(r => r.AppId == appId)
+                .AsQueryable();
 
             // Filtering
             if (!string.IsNullOrWhiteSpace(searchTerm))
@@ -113,10 +118,10 @@ namespace Infrastructure.Services
             return roles;
         }
 
-        public async Task<string[]> GetRoleNamesAsync(CancellationToken cancellationToken)
+        public async Task<string[]> GetRoleNamesAsync(int appId, CancellationToken cancellationToken)
         {
             string[] roleNames = await _roleManager.Roles
-                .Where(r => r.IsActive == true)
+                .Where(r => r.AppId == appId)
                 .Select(rn => rn.Name!)
                 .ToArrayAsync(cancellationToken);
 
@@ -286,7 +291,7 @@ namespace Infrastructure.Services
 
         private bool IsProtectedRole(Role role)
         {
-            return DefaultRoleConstants.AllRoles.Contains(role.Name);
+            return SsoAppDefaultRoleConstants.AllRoles.Contains(role.Name);
         }
     }
 }

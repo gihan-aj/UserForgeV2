@@ -14,6 +14,7 @@ using Domain.RefreshTokens;
 using Microsoft.AspNetCore.Identity;
 using Domain.UserRoles;
 using Domain.UserSettings;
+using Domain.Apps;
 
 namespace Infrastructure.Persistence
 {
@@ -37,6 +38,8 @@ namespace Infrastructure.Persistence
         public DbSet<Permission> Permissions { get; set; }
 
         public DbSet<RolePermission> RolePermissions { get; set; }
+
+        public DbSet<App> Apps { get; set; }
 
         public ApplicationDbContext(DbContextOptions options) : base(options) { }
 

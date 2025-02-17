@@ -2,5 +2,5 @@
 
 namespace Application.Roles.Queries.GetRoleNames
 {
-    public record GetRoleNamesQuery(): IQuery<string[]>;
+    public record GetRoleNamesQuery(int appId): IQuery<string[]>;
 }

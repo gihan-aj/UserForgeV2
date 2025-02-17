@@ -29,6 +29,19 @@ namespace Infrastructure.Persistence.Configurations
             builder.Property(u => u.Email).HasMaxLength(256);
             builder.Property(u => u.NormalizedEmail).HasMaxLength(256);
 
+            builder.Property(a => a.CreatedBy)
+                .IsRequired()
+                .HasMaxLength(256);
+
+            builder.Property(a => a.LastModifiedBy)
+                .HasMaxLength(256);
+            
+            builder.Property(a => a.UserRolesModifiedBy)
+                .HasMaxLength(256);
+
+            builder.Property(a => a.DeletedBy)
+                .HasMaxLength(256);
+
             // The relationships between User and other entity types
 
             // Each User can have many UserClaims

@@ -9,20 +9,15 @@ using Application.Roles.Queries.GetRoleNames;
 using Application.Roles.Queries.GetRolePermissions;
 using Application.Shared.Pagination;
 using Application.Shared.Requesets;
-using Application.UserManagement.Commands.AssignRoles;
 using Domain.Permissions;
-using Domain.Roles;
-using Domain.Users;
 using Infrastructure.Authentication;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
 using SharedKernal;
 using System;
 using System.Linq;
-using System.Net.Http;
 using System.Security.Claims;
 using System.Threading;
 using WebAPI.Helpers;
@@ -38,7 +33,7 @@ namespace WebAPI.Endpoints
                 .WithTags("Role Management");
 
             group.MapPost("create", 
-                [HasPermission(PermissionConstants.RolesCreate)] 
+                [HasPermission(SsoPermissionConstants.RolesCreate)] 
                 async (
                     CreateRoleRequest request,
                     HttpContext httpContext,
@@ -50,7 +45,7 @@ namespace WebAPI.Endpoints
                 {
                     return Results.Unauthorized();
                 }
-                var command = new CreateRoleCommand(request.RoleName.Trim().ToLower(), request.Description, userId);
+                var command = new CreateRoleCommand(request.RoleName.Trim().ToLower(), request.Description, request.AppId, userId);
                 var result = await sender.Send(command, cancellationToken);
                 if (result.IsFailure)
                 {
@@ -67,7 +62,7 @@ namespace WebAPI.Endpoints
                 .Produces(StatusCodes.Status201Created);
 
             group.MapPut("update", 
-                [HasPermission(PermissionConstants.RolesEdit)] 
+                [HasPermission(SsoPermissionConstants.RolesEdit)] 
                 async (
                     UpdateRoleRequest request,
                     HttpContext httpContext,
@@ -97,13 +92,14 @@ namespace WebAPI.Endpoints
                 .Produces(StatusCodes.Status204NoContent);
 
             group.MapGet("", 
-                [HasPermission(PermissionConstants.RolesRead)] 
+                [HasPermission(SsoPermissionConstants.RolesAccess)] 
                 async (
                     string? searchTerm,
                     string? sortColumn,
                     string? sortOrder,
                     int page,
                     int pageSize,
+                    int appId,
                     ISender sender,
                     CancellationToken cancellationToken) =>
             {
@@ -112,7 +108,8 @@ namespace WebAPI.Endpoints
                     sortColumn,
                     sortOrder,
                     page,
-                    pageSize);
+                    pageSize,
+                    appId);
 
                 var result = await sender.Send(query, cancellationToken);
 
@@ -121,19 +118,20 @@ namespace WebAPI.Endpoints
                 .Produces(StatusCodes.Status200OK, typeof(PaginatedList<GetAllRolesResponse>));
 
             group.MapGet("role-names",
-                [HasPermission(PermissionConstants.RolesRead)]
+                [HasPermission(SsoPermissionConstants.RolesAccess)]
                 async (
+                    int appId,
                     ISender sender,
                     CancellationToken cancellationToken) =>
             {
-                var result = await sender.Send(new GetRoleNamesQuery(), cancellationToken);
+                var result = await sender.Send(new GetRoleNamesQuery(appId), cancellationToken);
 
                 return Results.Ok(result.Value);
             })
                 .Produces(StatusCodes.Status200OK, typeof(string[]));
 
             group.MapPut("permissions", 
-                [HasPermission(PermissionConstants.RolesManagePermissions)] 
+                [HasPermission(SsoPermissionConstants.RolesPermissionsManage)] 
                 async (
                     AssignRolePermissionsRequest request,
                     HttpContext httpContext,
@@ -158,7 +156,7 @@ namespace WebAPI.Endpoints
                 .Produces(StatusCodes.Status204NoContent);
 
             group.MapGet("permissions", 
-                [HasPermission(PermissionConstants.RolesReadPermissions)] 
+                [HasPermission(SsoPermissionConstants.RolesPermissionsAccess)] 
                 async (
                     string roleId,
                     ISender sender,
@@ -176,7 +174,7 @@ namespace WebAPI.Endpoints
                 .Produces(StatusCodes.Status200OK, typeof(RolePermissionsResponse));
 
             group.MapPut("activate", 
-                [HasPermission(PermissionConstants.RolesStatusChange)] 
+                [HasPermission(SsoPermissionConstants.RolesStatusChange)] 
                 async (
                     BulkIdsRequest<string> ids,
                     HttpContext httpContext,
@@ -216,7 +214,7 @@ namespace WebAPI.Endpoints
                 .Produces(StatusCodes.Status200OK);
 
             group.MapPut("deactivate", 
-                [HasPermission(PermissionConstants.RolesStatusChange)] 
+                [HasPermission(SsoPermissionConstants.RolesStatusChange)] 
                 async (
                     BulkIdsRequest<string> ids,
                     HttpContext httpContext,
@@ -256,7 +254,7 @@ namespace WebAPI.Endpoints
                 .Produces(StatusCodes.Status200OK);
             
             group.MapPut("delete", 
-                [HasPermission(PermissionConstants.RolesDelete)] 
+                [HasPermission(SsoPermissionConstants.RolesDelete)] 
                 async (
                     BulkIdsRequest<string> ids,
                     HttpContext httpContext,

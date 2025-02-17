@@ -4,9 +4,9 @@ using System.Reflection;
 
 namespace Domain.Roles
 {
-    public static class DefaultRoleConstants
+    public static class SsoAppDefaultRoleConstants
     {
-        public static readonly string?[] AllRoles = typeof(DefaultRoleConstants)
+        public static readonly string?[] AllRoles = typeof(SsoAppDefaultRoleConstants)
             .GetFields(BindingFlags.Public | BindingFlags.Static)
             .Where(field => field.FieldType == typeof(string))
             .Select(field => (string?)field.GetValue(null))

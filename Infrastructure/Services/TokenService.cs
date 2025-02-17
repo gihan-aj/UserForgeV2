@@ -24,14 +24,13 @@ namespace Infrastructure.Services
             _key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_tokenSettings.JWT.HmacSha256SecretKey));
         }
 
-        public string CreateJwtToken(User user, string[] roles)
+        public string CreateJwtToken(User user, int appId, string[] roles)
         {
             var userClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id),
                 new Claim(ClaimTypes.Email, user.Email!),
-                //new Claim(ClaimTypes.GivenName, user.FirstName),
-                //new Claim(ClaimTypes.Surname, user.LastName),
+                new Claim("appId", appId.ToString())
             };
 
             userClaims.AddRange(

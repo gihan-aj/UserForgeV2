@@ -4,7 +4,7 @@ namespace Application.Abstractions.Services
 {
     public interface ITokenService
     {
-        string CreateJwtToken(User user, string[] roles);
+        string CreateJwtToken(User user, int appId, string[] roles);
         string GenerateRefreshToken();
         string Hash(string input);
     }

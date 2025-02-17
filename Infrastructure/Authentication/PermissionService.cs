@@ -22,7 +22,7 @@ namespace Infrastructure.Authentication
             _context = context;
         }
 
-        public async Task<HashSet<string>> GetPermissionsAsync(string userId)
+        public async Task<HashSet<string>> GetPermissionsAsync(string userId, int appId)
         {
             IEnumerable<Role>[] roles = await _context.Set<User>()
                 .Include(u => u.UserRoles)
@@ -35,14 +35,14 @@ namespace Infrastructure.Authentication
 
             return roles
                 .SelectMany(r => r)
-                .Where(r => r.IsActive)
+                .Where(r => r.IsActive && r.AppId == appId)
                 .SelectMany(u => u.RolePermissions)
                 .Select(ur => ur.Permission)
                 .Select(p => p.Name)
                 .ToHashSet();
         }
         
-        public async Task<HashSet<string>> GetPermissionsAsync(string userId, CancellationToken cancellationToken)
+        public async Task<HashSet<string>> GetPermissionsAsync(string userId, int appId, CancellationToken cancellationToken)
         {
             IEnumerable<Role>[] roles = await _context.Set<User>()
                 .Include(u => u.UserRoles)
@@ -55,7 +55,7 @@ namespace Infrastructure.Authentication
 
             return roles
                 .SelectMany(r => r)
-                .Where(r => r.IsActive)
+                .Where(r => r.IsActive && r.AppId == appId)
                 .SelectMany(u => u.RolePermissions)
                 .Select(ur => ur.Permission)
                 .Select(p => p.Name)

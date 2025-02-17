@@ -18,7 +18,11 @@ namespace Application.Roles.Commands.Create
 
         public async Task<Result<string>> Handle(CreateRoleCommand request, CancellationToken cancellationToken)
         {
-            var result = await _roleManagementService.CreateAsync(request.RoleName, request.Description, request.UserId);
+            var result = await _roleManagementService.CreateAsync(
+                request.RoleName, 
+                request.Description, 
+                request.AppId, 
+                request.UserId);
             return result;
         }
     }

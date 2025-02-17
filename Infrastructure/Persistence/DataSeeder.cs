@@ -8,8 +8,8 @@ using Application.Abstractions.Data;
 using Domain.Permissions;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
 using Domain.RolePermissions;
+using Domain.Apps;
 
 namespace Infrastructure.Persistence
 {
@@ -29,102 +29,51 @@ namespace Infrastructure.Persistence
             using var transaction = await context.Database.BeginTransactionAsync();
             try
             {
-                // Seed permissions
-                var permissions = Permissions.AllPermissions;
-                var dbPermissions = await context.Permissions.ToListAsync();
-                var permissionsToAdd = permissions.Except(dbPermissions);
-                var permissionsToRemove = dbPermissions.Except(permissions);
-
-                foreach (var permission in permissionsToRemove)
+                var ssoApp = await context.Apps.FirstOrDefaultAsync(a => a.Name == AppNames.SsoApp);
+                if(ssoApp is null)
                 {
-                    context.Permissions.Remove(permission);
+                    ssoApp = App.Create(AppNames.SsoApp, "Centralized user management and authentication platform", createdBy);
+                    context.Apps.Add(ssoApp);
+                    await unitOfWork.SaveChangesAsync();
                 }
 
-                foreach (var permission in permissionsToAdd)
+                var ssoPermissions = new SsoPermissions(ssoApp.Id);
+
+                if (!await context.Permissions.AnyAsync(p => p.AppId == ssoApp.Id))
                 {
-                    context.Permissions.Add(permission);
-                }
-
-                await context.SaveChangesAsync();
-
-                // Seed roles and assign permissions
-                foreach (var roleMapping in DefaultRolePermissions.RolePermissionMappings)
-                {
-                    var roleName = roleMapping.Key;
-                    var rolePermissionNames = roleMapping.Value;
-
-                    var role = await roleManager.FindByNameAsync(roleName);
-                    if (role is null)
+                    foreach(var permission in ssoPermissions.AllPermissions)
                     {
-                        role = new Role(roleName, null, createdBy);
-                        var roleCreatedResult = await roleManager.CreateAsync(role);
-                        if (!roleCreatedResult.Succeeded)
-                        {
-                            var errors = string.Join(", ", roleCreatedResult.Errors.Select(e => e.Description));
-                            throw new Exception($"Failed to create role: {errors}");
-                        }
+                        context.Permissions.Add(permission);
+                    }
 
-                        foreach (var rolePermissionName in rolePermissionNames)
+                    await unitOfWork.SaveChangesAsync();
+                }
+
+                foreach(var roleMappings in SsoAppDefaultRolePermissions.RolePermissionMappings)
+                {
+                    var roleName = roleMappings.Key;
+                    if(!await context.Roles.AnyAsync(r => r.Name == roleName && r.AppId == ssoApp.Id))
+                    {
+                        var role = new Role(roleName, null, ssoApp.Id, createdBy);
+                        role.NormalizedName = roleManager.NormalizeKey(roleName);
+                        context.Roles.Add(role);
+
+                        var rolePermissions = roleMappings.Value;
+                        foreach(var rolePermissionName in rolePermissions)
                         {
-                            var rolePermisssion = permissions.FirstOrDefault(p => p.Name == rolePermissionName);
-                            if (rolePermisssion is not null)
+                            var rolePermission = ssoPermissions.AllPermissions.FirstOrDefault(p => p.Name == rolePermissionName);
+                            if(rolePermission is not null)
                             {
                                 role.RolePermissions.Add(new RolePermission
                                 {
                                     RoleId = role.Id,
-                                    PermissionId = rolePermisssion.Id
+                                    PermissionId = rolePermission.Id
                                 });
                             }
                         }
-                    }
-                    else
-                    {
-                        var existingRolePermissions = await context.RolePermissions
-                            .Where(rp => rp.RoleId == role.Id)
-                            .Include(rp => rp.Permission)
-                            .ToListAsync();
-
-                        var existingRolePermissionNames = existingRolePermissions
-                            .Select(rp => rp.Permission)
-                            .Select(p => p.Name);
-
-                        var rolePermissionsToAdd = rolePermissionNames
-                            .Except(existingRolePermissionNames);
-
-                        var rolePermissionsToRemove = existingRolePermissionNames
-                            .Except(rolePermissionNames);
-
-                        if (rolePermissionsToRemove.Count() > 0)
-                        {
-                            foreach (var rolePermissionToRemove in rolePermissionsToRemove)
-                            {
-                                var permissionToRemove = existingRolePermissions
-                                    .FirstOrDefault(rp => rp.Permission.Name == rolePermissionToRemove);
-                                if (permissionToRemove is not null)
-                                {
-                                    role.RolePermissions.Remove(permissionToRemove);
-                                }
-                            }
-                        }
-
-                        if (rolePermissionsToAdd.Count() > 0)
-                        {
-                            foreach (var rolePermissionToAdd in rolePermissionsToAdd)
-                            {
-                                var permissionToAdd = permissions.FirstOrDefault(p => p.Name == rolePermissionToAdd);
-                                if (permissionToAdd is not null)
-                                {
-                                    role.RolePermissions.Add(new RolePermission
-                                    {
-                                        RoleId = role.Id,
-                                        PermissionId = permissionToAdd.Id
-                                    });
-                                }
-                            }
-                        }
+                        await unitOfWork.SaveChangesAsync();
                     }
 
-                    await context.SaveChangesAsync();
                 }
 
                 // Users
@@ -133,16 +82,28 @@ namespace Infrastructure.Persistence
                 var superadminLastName = "superadministrator";
                 var superadminEmail = "superadmin@userforge.com";
                 var superadminPassword = "SuperAdmin@123";
-
-                User superadmin = User.Create(superadminFirstName, superadminLastName, superadminEmail, createdBy);
-                superadmin.EmailConfirmed = true;
-
+             
                 if (!await context.Users.AnyAsync(u => u.Email == superadminEmail))
                 {
+                    User superadmin = User.Create(superadminFirstName, superadminLastName, superadminEmail, createdBy);
+                    superadmin.EmailConfirmed = true;
+
                     var userCreatedResult = await userManager.CreateAsync(superadmin, superadminPassword);
                     if (userCreatedResult.Succeeded)
                     {
-                        await userManager.AddToRolesAsync(superadmin, [DefaultRoleConstants.SuperAdmin]);
+                        var superAdminRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == SsoAppDefaultRoleConstants.SuperAdmin && r.AppId == ssoApp.Id);
+                        if(superAdminRole is not null)
+                        {
+                            superadmin.UserRoles.Add(new Domain.UserRoles.UserRole
+                            {
+                                UserId = superadmin.Id,
+                                RoleId = superAdminRole.Id
+                            });
+
+                            ssoApp.Users.Add(superadmin);
+
+                            await unitOfWork.SaveChangesAsync();
+                        }
                     }
                     else
                     {
@@ -157,15 +118,27 @@ namespace Infrastructure.Persistence
                 var adminEmail = "admin@userforge.com";
                 var adminPassword = "Admin@123";
 
-                User admin = User.Create(adminFirstName, adminLastName, adminEmail, createdBy);
-                admin.EmailConfirmed = true;
-
                 if (!await context.Users.AnyAsync(u => u.Email == adminEmail))
                 {
+                    User admin = User.Create(adminFirstName, adminLastName, adminEmail, createdBy);
+                    admin.EmailConfirmed = true;
+
                     var userCreatedResult = await userManager.CreateAsync(admin, adminPassword);
                     if (userCreatedResult.Succeeded)
                     {
-                        await userManager.AddToRolesAsync(admin, [DefaultRoleConstants.Admin]);
+                        var adminRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == SsoAppDefaultRoleConstants.Admin && r.AppId == ssoApp.Id);
+                        if (adminRole is not null)
+                        {
+                            admin.UserRoles.Add(new Domain.UserRoles.UserRole
+                            {
+                                UserId = admin.Id,
+                                RoleId = adminRole.Id
+                            });
+
+                            ssoApp.Users.Add(admin);
+
+                            await unitOfWork.SaveChangesAsync();
+                        }
                     }
                     else
                     {
@@ -180,15 +153,27 @@ namespace Infrastructure.Persistence
                 var managerEmail = "manager@userforge.com";
                 var managerPassword = "Manager@123";
 
-                User manager = User.Create(managerFirstName, managerLastName, managerEmail, createdBy);
-                manager.EmailConfirmed = true;
-
                 if (!await context.Users.AnyAsync(u => u.Email == managerEmail))
                 {
+                    User manager = User.Create(managerFirstName, managerLastName, managerEmail, createdBy);
+                    manager.EmailConfirmed = true;
+
                     var userCreatedResult = await userManager.CreateAsync(manager, managerPassword);
                     if (userCreatedResult.Succeeded)
                     {
-                        await userManager.AddToRolesAsync(manager, [DefaultRoleConstants.Manager]);
+                        var managerRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == SsoAppDefaultRoleConstants.Manager && r.AppId == ssoApp.Id);
+                        if (managerRole is not null)
+                        {
+                            manager.UserRoles.Add(new Domain.UserRoles.UserRole
+                            {
+                                UserId = manager.Id,
+                                RoleId = managerRole.Id
+                            });
+
+                            ssoApp.Users.Add(manager);
+
+                            await unitOfWork.SaveChangesAsync();
+                        }
                     }
                     else
                     {
@@ -204,16 +189,28 @@ namespace Infrastructure.Persistence
                 var userLastName = "user";
                 var userEmail = "user@userforge.com";
                 var userPassword = "User@123";
-
-                User user = User.Create(userFirstName, userLastName, userEmail, createdBy);
-                user.EmailConfirmed = true;
-
+             
                 if (!await userManager.Users.AnyAsync(u => u.Email == userEmail))
                 {
+                    User user = User.Create(userFirstName, userLastName, userEmail, createdBy);
+                    user.EmailConfirmed = true;
+
                     var userCreatedResult = await userManager.CreateAsync(user, userPassword);
                     if (userCreatedResult.Succeeded)
                     {
-                        await userManager.AddToRolesAsync(user, [DefaultRoleConstants.User]);
+                        var userRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == SsoAppDefaultRoleConstants.User && r.AppId == ssoApp.Id);
+                        if (userRole is not null)
+                        {
+                            user.UserRoles.Add(new Domain.UserRoles.UserRole
+                            {
+                                UserId = user.Id,
+                                RoleId = userRole.Id
+                            });
+
+                            ssoApp.Users.Add(user);
+
+                            await unitOfWork.SaveChangesAsync();
+                        }
                     }
                     else
                     {

@@ -25,8 +25,14 @@ namespace Infrastructure.Authentication
             //    x => x.Type == JwtRegisteredClaimNames.NameId)?.Value;
 
             string? userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            string? appIdString = context.User.FindFirst("appId")?.Value;
 
-            if (userId is null)
+            if (userId is null || appIdString is null)
+            {
+                return;
+            }
+
+            if(!int.TryParse(appIdString, out int appId))
             {
                 return;
             }
@@ -37,7 +43,7 @@ namespace Infrastructure.Authentication
                 .GetRequiredService<IPermissionService>();
 
             HashSet<string> permissions =  await permissionsService
-                .GetPermissionsAsync(userId);
+                .GetPermissionsAsync(userId, appId);
 
             if (permissions.Contains(requirement.Permission))
             {

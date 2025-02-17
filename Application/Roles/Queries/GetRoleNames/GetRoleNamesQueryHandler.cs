@@ -17,7 +17,7 @@ namespace Application.Roles.Queries.GetRoleNames
 
         public async Task<Result<string[]>> Handle(GetRoleNamesQuery request, CancellationToken cancellationToken)
         {
-            return await _roleManagementService.GetRoleNamesAsync(cancellationToken);
+            return await _roleManagementService.GetRoleNamesAsync(request.appId, cancellationToken);
         }
     }
 }

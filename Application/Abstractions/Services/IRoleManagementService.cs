@@ -10,7 +10,7 @@ namespace Application.Abstractions.Services
 {
     public interface IRoleManagementService
     {
-        Task<Result<string>> CreateAsync(string roleName, string description, string userId);
+        Task<Result<string>> CreateAsync(string roleName, string description, int appId, string userId);
 
         Task<Result> UpdateAsync(string roleId, string roleName, string description, string userId);
 
@@ -20,9 +20,10 @@ namespace Application.Abstractions.Services
             string? sortOrder,
             int page,
             int pageSize,
+            int appId,
             CancellationToken cancellationToken);
 
-        Task<string[]> GetRoleNamesAsync(CancellationToken cancellationToken);
+        Task<string[]> GetRoleNamesAsync(int appId, CancellationToken cancellationToken);
 
         Task<Role?> GetRoleById(string id);
 

@@ -14,7 +14,7 @@ namespace Infrastructure.Persistence.Configurations
             builder.Property(x => x.Description).HasMaxLength(450);
             builder.Property(x => x.Order).IsRequired();
 
-            builder.HasIndex(x => x.Name).IsUnique();
+            builder.HasIndex(x => new { x.Name, x.AppId }).IsUnique();
             builder.HasIndex(x => x.Order).IsUnique();
 
             builder.HasMany(p => p.RolePermissions)

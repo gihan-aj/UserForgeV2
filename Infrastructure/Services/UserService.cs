@@ -49,7 +49,7 @@ namespace Infrastructure.Services
                 return CreateIdentityError<User>(createUserResult.Errors);
             }
 
-            var addUserRoleResult = await _userManager.AddToRoleAsync(user,DefaultRoleConstants.User);
+            var addUserRoleResult = await _userManager.AddToRoleAsync(user,SsoAppDefaultRoleConstants.User);
             if (!addUserRoleResult.Succeeded)
             {
                 return CreateIdentityError<User>(addUserRoleResult.Errors);

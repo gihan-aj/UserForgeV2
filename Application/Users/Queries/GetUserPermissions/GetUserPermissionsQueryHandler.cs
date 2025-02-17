@@ -20,7 +20,7 @@ namespace Application.Users.Queries.GetUserPermissions
 
         public async Task<Result<List<string>>> Handle(GetUserPermissionsQuery request, CancellationToken cancellationToken)
         {
-            HashSet<string> result = await _permissionService.GetPermissionsAsync(request.UserId, cancellationToken);
+            HashSet<string> result = await _permissionService.GetPermissionsAsync(request.UserId, request.AppId, cancellationToken);
             if (result.Count == 0)
             {
                 return Result.Failure<List<string>>(PermissionErrors.NotFound.MissingUserPermissions);

@@ -22,7 +22,7 @@ namespace WebAPI.Endpoints
                 .WithTags("Permissions");
 
             group.MapGet("",
-                [HasPermission(PermissionConstants.PermissionsRead)]
+                [HasPermission(SsoPermissionConstants.PermissionsAccess)]
                 async (
                 ISender sender,
                 CancellationToken cancellationToken) =>

@@ -369,6 +369,7 @@ namespace WebAPI.Endpoints
                 .RequireAuthorization();
 
             group.MapGet("permissions", async (
+                int appId,
                 HttpContext httpContext,
                 ISender sender,
                 CancellationToken cancellationToken) =>
@@ -379,7 +380,7 @@ namespace WebAPI.Endpoints
                     return Results.Unauthorized();
                 }
 
-                var query = new GetUserPermissionsQuery(userId);
+                var query = new GetUserPermissionsQuery(userId, appId);
                 var result = await sender.Send(query, cancellationToken);
                 if (result.IsFailure)
                 {
@@ -507,6 +508,12 @@ namespace WebAPI.Endpoints
                 { Error: { Code: "MissingUserPermissions" } } =>
                 Results.Problem(ErrorHandler.CreateProblemDetails(
                     "Missing User Permissions",
+                    StatusCodes.Status404NotFound,
+                    result.Error)),
+                
+                { Error: { Code: "AppIdNotFound" } } =>
+                Results.Problem(ErrorHandler.CreateProblemDetails(
+                    "App Id Not Found",
                     StatusCodes.Status404NotFound,
                     result.Error)),
 
