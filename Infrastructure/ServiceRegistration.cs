@@ -16,6 +16,7 @@ namespace Infrastructure
             services.AddTransient<ITokenService, TokenService>();
             services.AddTransient<IUserManagementService, UserManagementService>();
             services.AddTransient<IRoleManagementService, RoleManagementService>();
+            services.AddTransient<IAppManagementService, AppManagementService>();
 
             services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
             services.AddScoped<IUserSettingsRepository, UserSettingsRepository>();

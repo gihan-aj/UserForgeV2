@@ -7,6 +7,8 @@ namespace Domain.Apps
         public static class NotFound
         {
             public static Error AppNotFound(int id) => new("AppNotFound", $"An app with the id: {id} is not found.");
+            public static Error AppsNotFoundToActivate => new("AppsNotFoundToActivate", "Cannot find any apps to activate.");
+            public static Error AppsNotFoundToDeactivate => new("AppsNotFoundToDeactivate", "Cannot find any apps to deactivate.");
             public static Error AppIdNotFound => new("AppIdNotFound", "Cannot find the platform id."); 
         }
         public static class Conflict
