@@ -24,9 +24,10 @@ namespace Infrastructure.Persistence.Repositories
             _roleManager = roleManager;
         }
 
-        public async Task<Result<List<Permission>>> GetAllPermissionsWithAssignedRoles(CancellationToken cancellationToken)
+        public async Task<Result<List<Permission>>> GetAllPermissionsWithAssignedRoles(int appId, CancellationToken cancellationToken)
         {
             return await _context.Permissions
+                .Where(p => p.AppId == appId)
                 .OrderBy (x => x.Order)
                 .Include(p => p.RolePermissions)
                 .ThenInclude(rp => rp.Role)

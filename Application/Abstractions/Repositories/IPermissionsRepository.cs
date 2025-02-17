@@ -9,7 +9,7 @@ namespace Application.Abstractions.Repositories
 {
     public interface IPermissionsRepository
     {
-        Task<Result<List<Permission>>> GetAllPermissionsWithAssignedRoles(CancellationToken cancellationToken);
+        Task<Result<List<Permission>>> GetAllPermissionsWithAssignedRoles(int appId, CancellationToken cancellationToken);
 
         Task<Result> AssignRolePermissionsAsync(
             Role role,

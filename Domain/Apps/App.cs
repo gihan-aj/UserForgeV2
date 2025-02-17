@@ -9,10 +9,11 @@ namespace Domain.Apps
 {
     public class App : ISoftDeletable, IAuditable
     {
-        private App(string name, string? description, string createdBy) 
+        private App(string name, string? description, string? baseUrl, string createdBy) 
         {
             Name = name;
             Description = description;
+            BaseUrl = baseUrl;
             CreatedBy = createdBy;
             CreatedOn = DateTime.UtcNow;
         }
@@ -53,16 +54,18 @@ namespace Domain.Apps
 
         public static App Create(
             string name, 
-            string? description, 
+            string? description,
+            string? baseUrl,
             string createdBy)
         {
-            return new App(name, description, createdBy);
+            return new App(name, description, baseUrl, createdBy);
         }
 
-        public void Update(string name, string? description, string modifiedBy)
+        public void Update(string name, string? description, string? baseUrl, string modifiedBy)
         {
             Name = name;
             Description = description;
+            BaseUrl = baseUrl;
             LastModifiedBy = modifiedBy;
             LastModifiedOn = DateTime.UtcNow;
         }

@@ -22,7 +22,7 @@ namespace Application.Permissions.Queries.GetAll
 
         public async Task<Result<List<PermissionDetails>>> Handle(GetAllPermissionsQuery request, CancellationToken cancellationToken)
         {
-            Result<List<Permission>> result = await _permissionsRepository.GetAllPermissionsWithAssignedRoles(cancellationToken);
+            Result<List<Permission>> result = await _permissionsRepository.GetAllPermissionsWithAssignedRoles(request.AppId ,cancellationToken);
 
             var permissionWithRoleNames = result.Value
                 .Select(p => new PermissionDetails(

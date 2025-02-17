@@ -49,7 +49,7 @@ namespace Application.Users.Commands.Login
                 return Result.Failure<LoginUserResponse>(loginResult.Error);
             }
 
-            var app = _appsRepository.GetByNameAsync(AppNames.SsoApp);
+            var app = await _appsRepository.GetByNameAsync(AppNames.SsoApp);
             if(app is null)
             {
                 return Result.Failure<LoginUserResponse>(AppErrors.NotFound.AppIdNotFound);

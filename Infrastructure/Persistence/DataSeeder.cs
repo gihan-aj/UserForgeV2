@@ -32,7 +32,7 @@ namespace Infrastructure.Persistence
                 var ssoApp = await context.Apps.FirstOrDefaultAsync(a => a.Name == AppNames.SsoApp);
                 if(ssoApp is null)
                 {
-                    ssoApp = App.Create(AppNames.SsoApp, "Centralized user management and authentication platform", createdBy);
+                    ssoApp = App.Create(AppNames.SsoApp, "Centralized user management and authentication platform", null, createdBy);
                     context.Apps.Add(ssoApp);
                     await unitOfWork.SaveChangesAsync();
                 }

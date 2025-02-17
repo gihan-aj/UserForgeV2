@@ -3,5 +3,5 @@ using System.Collections.Generic;
 
 namespace Application.Permissions.Queries.GetAll
 {
-    public record GetAllPermissionsQuery() : IQuery<List<PermissionDetails>>;
+    public record GetAllPermissionsQuery(int AppId) : IQuery<List<PermissionDetails>>;
 }

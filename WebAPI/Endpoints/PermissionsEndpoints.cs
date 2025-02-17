@@ -24,13 +24,14 @@ namespace WebAPI.Endpoints
             group.MapGet("",
                 [HasPermission(SsoPermissionConstants.PermissionsAccess)]
                 async (
+                int appId,
                 ISender sender,
                 CancellationToken cancellationToken) =>
             {
-                var result = await sender.Send(new GetAllPermissionsQuery(), cancellationToken);
+                var result = await sender.Send(new GetAllPermissionsQuery(appId), cancellationToken);
                 if (result.IsFailure)
                 {
-                    HandleFailure(result);
+                    return HandleFailure(result);
                 }
 
                 return Results.Ok(result.Value);
