@@ -283,9 +283,10 @@ namespace Infrastructure.Services
         {
             return sortColumn?.ToLower() switch
             {
+                "isActive" => role => role.IsActive,
                 "name" => role => role.Name!,
                 "id" => role => role.Id,
-                _ => user => user.Id
+                _ => role => role.Id
             };
         }
 

@@ -1,4 +1,7 @@
 ﻿using Application.Apps.Commands.Create;
+using Application.Apps.Commands.Update;
+using Application.Apps.Queries.GetPaginated;
+using Application.Shared.Pagination;
 using Domain.Permissions;
 using Infrastructure.Authentication;
 using MediatR;
@@ -54,6 +57,59 @@ namespace WebAPI.Endpoints
                     });
             })
                 .Produces(StatusCodes.Status201Created);
+
+            group.MapGet("", async (
+                string? searchTerm,
+                string? sortColumn,
+                string? sortOrder,
+                int page,
+                int pageSize,
+                ISender sender,
+                CancellationToken cancellationToken) =>
+            {
+                var query = new GetPaginatedAppListQuery(
+                    searchTerm,
+                    sortColumn,
+                    sortOrder,
+                    page,
+                    pageSize);
+
+                var result = await sender.Send(query, cancellationToken);
+
+                return Results.Ok(result.Value);
+            })
+                .Produces(StatusCodes.Status200OK, typeof(PaginatedList<PaginatedAppResponse>));
+
+            group.MapPut("update",
+                [HasPermission(SsoPermissionConstants.AppsEdit)]
+                async (
+                UpdateAppRequest request,
+                HttpContext context,
+                ISender sender,
+                CancellationToken cancellationToken) =>
+            {
+                var userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Results.Unauthorized();
+                }
+
+                var command = new UpdateAppCommand(
+                    request.Id,
+                    request.Name.Trim().ToLower(),
+                    request.Description,
+                    request.BaseUrl,
+                    userId);
+
+                var result = await sender.Send(command, cancellationToken);
+                if (result.IsFailure)
+                {
+                    return HandleFailure(result);
+                }
+
+                return Results.NoContent();
+            })
+                .Produces(StatusCodes.Status204NoContent);
         }
 
         private static IResult HandleFailure(Result result) =>

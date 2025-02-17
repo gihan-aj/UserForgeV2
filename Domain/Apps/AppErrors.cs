@@ -6,6 +6,7 @@ namespace Domain.Apps
     {
         public static class NotFound
         {
+            public static Error AppNotFound(int id) => new("AppNotFound", $"An app with the id: {id} is not found.");
             public static Error AppIdNotFound => new("AppIdNotFound", "Cannot find the platform id."); 
         }
         public static class Conflict
