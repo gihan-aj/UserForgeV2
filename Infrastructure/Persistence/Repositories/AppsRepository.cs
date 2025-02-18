@@ -85,6 +85,11 @@ namespace Infrastructure.Persistence.Repositories
             return apps;
         }
 
+        public void Remove(App app)
+        {
+            _context.Apps.Remove(app);
+        }
+
         private static Expression<Func<App, object>> GetSortProperty(string? sortColumn)
         {
             return sortColumn?.ToLower() switch

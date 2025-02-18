@@ -19,6 +19,7 @@ namespace Application.Abstractions.Repositories
             int page,
             int pageSize,
             CancellationToken cancellationToken);
+        void Remove(App app);
 
     }
 }

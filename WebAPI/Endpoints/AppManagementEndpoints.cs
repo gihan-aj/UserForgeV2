@@ -1,6 +1,7 @@
 ﻿using Application.Apps.Commands.Activate;
 using Application.Apps.Commands.Create;
 using Application.Apps.Commands.Deactivate;
+using Application.Apps.Commands.Delete;
 using Application.Apps.Commands.Update;
 using Application.Apps.Queries.GetPaginated;
 using Application.Shared.Pagination;
@@ -182,6 +183,40 @@ namespace WebAPI.Endpoints
                     });
             })
                 .Produces(StatusCodes.Status200OK);
+            
+            group.MapPut("delete", async (
+                BulkIdsRequest<int> req,
+                HttpContext context,
+                ISender sender,
+                CancellationToken cancellationToken) =>
+            {
+                var userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Results.Unauthorized();
+                }
+
+                var command = new DeleteAppsCommand(req.Ids.ToList(), userId);
+                var result = await sender.Send(command, cancellationToken);
+                if (result.IsFailure)
+                {
+                    return HandleFailure(result);
+                }
+
+                var deletedAppNames = result.Value;
+                return deletedAppNames.Count == 1
+                    ? Results.Ok(
+                    new
+                    {
+                        Message = $"App: '{deletedAppNames[0]}' was deleted."
+                    })
+                    : Results.Ok(
+                    new
+                    {
+                        Message = $"Apps: '{string.Join("', '", deletedAppNames)}' were deleted."
+                    });
+            })
+                .Produces(StatusCodes.Status200OK);
         }
 
         private static IResult HandleFailure(Result result) =>
@@ -222,6 +257,12 @@ namespace WebAPI.Endpoints
                    result.Error)),
                
                { Error: { Code: "AppsNotFoundToDeactivate" } } =>
+               Results.Problem(ErrorHandler.CreateProblemDetails(
+                   "Apps Not Found",
+                   StatusCodes.Status404NotFound,
+                   result.Error)),
+               
+               { Error: { Code: "AppsNotFoundToDelete" } } =>
                Results.Problem(ErrorHandler.CreateProblemDetails(
                    "Apps Not Found",
                    StatusCodes.Status404NotFound,
