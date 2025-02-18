@@ -12,6 +12,7 @@ using Application.Users.Commands.SendEmailChange;
 using Application.Users.Commands.SendPasswordReset;
 using Application.Users.Commands.Update;
 using Application.Users.Queries.GetUser;
+using Application.Users.Queries.GetUserApps;
 using Application.Users.Queries.GetUserPermissions;
 using Application.Users.Queries.GetUserSettings;
 using Domain.Users;
@@ -21,6 +22,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using SharedKernal;
 using System;
+using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading;
 using WebAPI.Helpers;
@@ -392,6 +394,27 @@ namespace WebAPI.Endpoints
             })
                 .Produces(StatusCodes.Status200OK)
                 .RequireAuthorization();
+
+            group.MapGet("apps", async (
+                HttpContext httpContext,
+                ISender sender,
+                CancellationToken cancellationToken) =>
+            {
+                var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Results.Unauthorized();
+                }
+
+                var result = await sender.Send(new GetUserAppsQuery(userId), cancellationToken);
+                if (result.IsFailure)
+                {
+                    return HandleFailure(result);
+                }
+
+                return Results.Ok(result.Value);
+            })
+                .Produces(StatusCodes.Status200OK, typeof(List<UserAppResponse>));
 
             group.MapPut("logout", async (
                 LogoutUserRequest request,

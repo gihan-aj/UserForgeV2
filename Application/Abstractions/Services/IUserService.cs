@@ -3,6 +3,9 @@ using SharedKernal;
 using System.Threading.Tasks;
 using System;
 using Application.Users.Commands.Login;
+using Application.Users.Queries.GetUserApps;
+using System.Collections.Generic;
+using System.Threading;
 
 namespace Application.Abstractions.Services
 {
@@ -46,6 +49,8 @@ namespace Application.Abstractions.Services
         Task<string?> GenerateChangeEmailTokenAsync(User user, string newEmail);
 
         Task<Result> ChangeEmailAsync(User user, string newEmail, string token);
+
+        Task<Result<List<UserAppResponse>>> GetUserAppsAsync(string userId, CancellationToken cancellationToken);
 
     }
 }

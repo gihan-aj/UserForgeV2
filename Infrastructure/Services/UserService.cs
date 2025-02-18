@@ -1,5 +1,6 @@
 ﻿using Application.Abstractions.Services;
 using Application.Users.Commands.Login;
+using Application.Users.Queries.GetUserApps;
 using Domain.Roles;
 using Domain.Users;
 using Microsoft.AspNetCore.Identity;
@@ -10,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using static Domain.Users.UserErrors;
 
@@ -284,6 +286,27 @@ namespace Infrastructure.Services
             }
 
             return Result.Success();
+        }
+
+        public async Task<Result<List<UserAppResponse>>> GetUserAppsAsync(string userId, CancellationToken cancellationToken)
+        {
+            var user = await _userManager.Users
+                .Include(u => u.Apps)
+                .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+
+            if(user is null)
+            {
+                return Result.Failure<List<UserAppResponse>>(UserErrors.NotFound.User(userId));
+            }
+
+            return user.Apps
+                .Where(a => a.IsActive)
+                .Select(a => new UserAppResponse(
+                    a.Id,
+                    a.Name,
+                    a.Description,
+                    a.BaseUrl))
+                .ToList();
         }
 
         private Result<T> CreateIdentityError<T>(IEnumerable<IdentityError> errors)
