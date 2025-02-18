@@ -27,6 +27,11 @@ namespace Application.Apps.Commands.Update
                 return AppErrors.NotFound.AppNotFound(request.Id);
             }
 
+            if (ProtectedApps.Names.Contains(app.Name))
+            {
+                return AppErrors.Conflict.ProtectedApp(app.Name);
+            }
+
             if(await _appsRepository.AppNameExists(request.Name))
             {
                 return AppErrors.Conflict.AppNameAlreadyExists(request.Name);

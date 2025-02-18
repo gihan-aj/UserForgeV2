@@ -32,6 +32,10 @@ namespace Application.Apps.Commands.Deactivate
 
             foreach (var app in appsToDeactivate)
             {
+                if (ProtectedApps.Names.Contains(app.Name))
+                {
+                    return Result.Failure<List<string>>(AppErrors.Conflict.ProtectedApp(app.Name));
+                }
                 app.Deactivate(request.ModifiedBy);
             }
 

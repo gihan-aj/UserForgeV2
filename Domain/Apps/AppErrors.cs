@@ -15,6 +15,7 @@ namespace Domain.Apps
         public static class Conflict
         {
             public static Error AppNameAlreadyExists(string appName) => new("AppNameAlreadyExists", $"An app with name: {appName} already exists.");
+            public static Error ProtectedApp(string name) => new("ProtectedApp", $"The app : {name} cannot be changed.");
         }
     }
 }

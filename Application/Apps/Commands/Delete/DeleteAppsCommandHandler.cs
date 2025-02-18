@@ -31,6 +31,10 @@ namespace Application.Apps.Commands.Delete
                 var app = await _appsRepository.GetByIdAsync(id);
                 if(app is not null)
                 {
+                    if (ProtectedApps.Names.Contains(app.Name))
+                    {
+                        return Result.Failure<List<string>>(AppErrors.Conflict.ProtectedApp(app.Name));
+                    }
                     appsToDelete.Add(app);
                 }
             }

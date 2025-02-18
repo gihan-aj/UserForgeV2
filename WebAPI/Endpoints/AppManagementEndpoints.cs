@@ -273,6 +273,12 @@ namespace WebAPI.Endpoints
                    "App Name Already Exists",
                    StatusCodes.Status409Conflict,
                    result.Error)),
+               
+               { Error: { Code: "ProtectedApp" } } =>
+               Results.Problem(ErrorHandler.CreateProblemDetails(
+                   "Protected App",
+                   StatusCodes.Status409Conflict,
+                   result.Error)),
 
                _ => Results.Problem(ErrorHandler.CreateProblemDetails(
                    "Internal server error",

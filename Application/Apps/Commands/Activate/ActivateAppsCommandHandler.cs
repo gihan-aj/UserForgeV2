@@ -35,6 +35,10 @@ namespace Application.Apps.Commands.Activate
 
             foreach(var app in appsToActivate)
             {
+                if (ProtectedApps.Names.Contains(app.Name))
+                {
+                    return Result.Failure<List<string>>(AppErrors.Conflict.ProtectedApp(app.Name));
+                }
                 app.Activate(request.ModifiedBy);
             }
 
