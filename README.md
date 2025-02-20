@@ -39,6 +39,78 @@ UserForge is a robust and flexible user management system designed to simplify a
 - Designed with extensibility in mind to adapt to your unique requirements.
 - Modular structure allows for easy addition of new features and integrations.
 
+## Future Improvements
+* Add audit logs to track user actions with Domain Event pattern.
+* Add cashing for user permissions 
+
+## Code Snippets
+
+### Permission Authorization Handler
+```c#
+public class PermissionAuthorizationHandler
+    : AuthorizationHandler<PermissionRequirement>
+{
+    private readonly IServiceScopeFactory _scopeFactory;
+
+    public PermissionAuthorizationHandler(IServiceScopeFactory scopeFactory)
+    {
+        _scopeFactory = scopeFactory;
+    }
+
+    protected override async Task HandleRequirementAsync(
+        AuthorizationHandlerContext context, 
+        PermissionRequirement requirement)
+    {
+        //string? userId = context.User.Claims.FirstOrDefault(
+        //    x => x.Type == JwtRegisteredClaimNames.NameId)?.Value;
+
+        string? userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        string? appIdString = context.User.FindFirst("appId")?.Value;
+
+        if (userId is null || appIdString is null)
+        {
+            return;
+        }
+
+        if(!int.TryParse(appIdString, out int appId))
+        {
+            return;
+        }
+
+        using IServiceScope scope = _scopeFactory.CreateScope();
+
+        IPermissionService permissionsService = scope.ServiceProvider
+            .GetRequiredService<IPermissionService>();
+
+        HashSet<string> permissions =  await permissionsService
+            .GetPermissionsAsync(userId, appId);
+
+        if (permissions.Contains(requirement.Permission))
+        {
+            context.Succeed(requirement);
+        }
+    }
+}
+```
+### Soft Delete
+```c#
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = new())
+        {
+            var softDeleteEntries = ChangeTracker
+                .Entries<ISoftDeletable>()
+                .Where(e => e.State == EntityState.Deleted);
+
+            foreach (var entry in softDeleteEntries)
+            {
+                entry.State = EntityState.Modified;
+                entry.Property(nameof(ISoftDeletable.IsDeleted)).CurrentValue = true;
+                entry.Property(nameof(ISoftDeletable.DeletedOn)).CurrentValue = DateTime.UtcNow;
+            }
+
+            return await base.SaveChangesAsync(cancellationToken);
+        }
+```
+
 ## Getting Started
 
 ### Prerequisites
