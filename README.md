@@ -6,7 +6,6 @@ UserForge is a robust and flexible user management system designed to simplify a
 
 ### 1. **Role-Based Access Control (RBAC)**
 - Fine-grained permission management based on roles.
-- Dynamic permission system for flexible authorization.
 
 ### 2. **Single Sign-On (SSO)**
 - Serve as a centralized authentication platform for multiple software packages (e.g., POS, inventory management, accounting).
@@ -43,7 +42,7 @@ UserForge is a robust and flexible user management system designed to simplify a
 ## Getting Started
 
 ### Prerequisites
-- **Development Environment**: .NET 8, EF Core, Angular (for the frontend).
+- **Development Environment**: .NET 8, EF Core, Angular (for the front end).
 - **Database**: SQL Server.
 - **Other Tools**: SMTP server for email functionality.
 
