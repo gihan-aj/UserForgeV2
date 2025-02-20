@@ -60,7 +60,7 @@ namespace Application.Users.Commands.Refresh
                 return Result.Failure<RefreshUserResponse>(UserErrors.Token.InvalidRefreshToken);
             }
 
-            var app = _appsRepository.GetByNameAsync(AppNames.SsoApp);
+            var app = await _appsRepository.GetByNameAsync(AppNames.SsoApp);
             if (app is null)
             {
                 return Result.Failure<RefreshUserResponse>(AppErrors.NotFound.AppIdNotFound);
