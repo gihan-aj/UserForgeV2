@@ -30,6 +30,10 @@ namespace Infrastructure.Persistence.Repositories
         {
             return await _context.Apps.AnyAsync(a => a.Name == name);
         }
+        public async Task<bool> AppNameExists(string name, int id)
+        {
+            return await _context.Apps.AnyAsync(a => a.Name == name && a.Id != id);
+        }
 
         public void Add(App app)
         {

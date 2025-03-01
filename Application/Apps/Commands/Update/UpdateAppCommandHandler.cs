@@ -32,7 +32,7 @@ namespace Application.Apps.Commands.Update
                 return AppErrors.Conflict.ProtectedApp(app.Name);
             }
 
-            if(await _appsRepository.AppNameExists(request.Name))
+            if(await _appsRepository.AppNameExists(request.Name, request.Id))
             {
                 return AppErrors.Conflict.AppNameAlreadyExists(request.Name);
             }

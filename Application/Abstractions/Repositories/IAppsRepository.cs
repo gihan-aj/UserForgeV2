@@ -10,6 +10,7 @@ namespace Application.Abstractions.Repositories
     {
         Task<App?> GetByNameAsync(string name);
         Task<bool> AppNameExists(string name);
+        Task<bool> AppNameExists(string name, int id);
         void Add(App app);
         Task<App?> GetByIdAsync(int id);
         Task<PaginatedList<PaginatedAppResponse>> GetPaginatedAppListAsync(
