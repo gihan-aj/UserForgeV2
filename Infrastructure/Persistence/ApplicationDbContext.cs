@@ -39,6 +39,8 @@ namespace Infrastructure.Persistence
 
         public DbSet<RolePermission> RolePermissions { get; set; }
 
+        public override DbSet<Role> Roles { get; set; }
+
         public DbSet<App> Apps { get; set; }
 
         public ApplicationDbContext(DbContextOptions options) : base(options) { }
@@ -62,6 +64,11 @@ namespace Infrastructure.Persistence
             }
 
             return await base.SaveChangesAsync(cancellationToken);
+        }
+
+        public string NormalizeKey(string key)
+        {
+            return key.Trim().Normalize().ToUpperInvariant();
         }
     }
 }

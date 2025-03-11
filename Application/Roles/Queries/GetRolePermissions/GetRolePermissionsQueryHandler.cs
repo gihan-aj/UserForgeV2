@@ -40,7 +40,7 @@ namespace Application.Roles.Queries.GetRolePermissions
                     Description: p.Description))
                 .ToList();
 
-            return new RolePermissionsResponse(role.Id, role.Name!, role.Description, role.IsActive, permissions);
+            return new RolePermissionsResponse(role.Id, role.Name!, role.Description, role.IsActive, role.AppId, role.App!.Name, permissions);
         }
     }
 }

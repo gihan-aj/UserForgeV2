@@ -22,6 +22,7 @@ namespace Infrastructure
             services.AddScoped<IUserSettingsRepository, UserSettingsRepository>();
             services.AddScoped<IPermissionsRepository, PermissionsRepository>();
             services.AddScoped<IAppsRepository, AppsRepository>();
+            services.AddScoped<IRolesRepository, RolesRepository>();
 
             services.AddTransient<IPermissionService, PermissionService>();
 

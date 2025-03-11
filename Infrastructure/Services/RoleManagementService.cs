@@ -36,6 +36,7 @@ namespace Infrastructure.Services
             role.NormalizedName = normalizedName;
 
             var result = await _roleManager.CreateAsync(role);
+
             if (!result.Succeeded)
             {
                 return CreateIdentityError<string>(result.Errors);
@@ -136,6 +137,7 @@ namespace Infrastructure.Services
         public async Task<Role?> GetRoleWithRolePermissionsAsync(string id)
         {
             return await _roleManager.Roles
+                .Include(r => r.App)
                 .Include(r => r.RolePermissions)
                 .ThenInclude(rp => rp.Permission)
                 .FirstOrDefaultAsync(r => r.Id == id);

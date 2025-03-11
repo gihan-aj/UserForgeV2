@@ -8,5 +8,7 @@ namespace Application.Roles.Queries.GetRolePermissions
         string Name,
         string? Description,
         bool IsActive,
+        int AppId,
+        string AppName,
         List<RolePermissionResponse> Permissions);
 }

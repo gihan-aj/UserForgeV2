@@ -7,6 +7,7 @@ using Domain.RolePermissions;
 using Domain.RefreshTokens;
 using Domain.UserSettings;
 using Domain.Apps;
+using Domain.Roles;
 
 namespace Application.Abstractions.Data
 {
@@ -18,6 +19,8 @@ namespace Application.Abstractions.Data
 
         public DbSet<Permission> Permissions { get; set; }
 
+        public DbSet<Role> Roles { get; set; }
+
         public DbSet<RolePermission> RolePermissions { get; set; }
 
         public DbSet<App> Apps { get; set; }
@@ -25,5 +28,7 @@ namespace Application.Abstractions.Data
         DatabaseFacade Database { get; }
 
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+
+        string NormalizeKey(string key);
     }
 }
